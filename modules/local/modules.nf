@@ -1,7 +1,7 @@
 process splitJointVCF {
   tag "${caseJointVCF}_${chr}"
   label 'process_single'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
     path caseJointVCF
@@ -25,10 +25,13 @@ process normalizeQCAfterSplit {
   tag "${chr}"
   label 'process_single'
   publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
     tuple val(chr), path(vcfFile)
+    path reference
+    path referenceFai
+    path referenceGzi
 
   output:
     val("${chr}"), emit: chr
@@ -38,7 +41,7 @@ process normalizeQCAfterSplit {
   script:
   """
   outputPrefix=${chr}
-  ${params.CoCoRVFolder}/utilities/vcfQCAndNormalize.sh ${vcfFile} \${outputPrefix} ${params.refFASTA}
+  ${params.CoCoRVFolder}/utilities/vcfQCAndNormalize.sh ${vcfFile} \${outputPrefix} ${reference}
   """
 }
 
@@ -46,7 +49,7 @@ process coverageIntersect {
   tag "${caseBed}"
   label 'process_single'
   publishDir "${params.outdir}", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
     path caseBed
@@ -63,15 +66,16 @@ process coverageIntersect {
 }
 
 process normalizeQC {
-  tag "${caseVCFPrefix}_${chr}"
+  tag "${chr}"
   label 'process_single'
   publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
-    val caseVCFPrefix
-    val chr
-    val caseVCFSuffix
+    tuple val(chr), path(vcfFile)
+    path reference
+    path referenceFai
+    path referenceGzi
 
   output:
     val("${chr}"), emit: chr
@@ -79,14 +83,9 @@ process normalizeQC {
     path("${chr}.biallelic.leftnorm.ABCheck.vcf.gz.tbi"), emit: normalizedQCedVCFFileIndex
 
   script:
-  if (chr == "NA") {
-    vcfFile = caseVCFPrefix + caseVCFSuffix
-  } else {
-    vcfFile = caseVCFPrefix + chr + caseVCFSuffix
-  }
   """
   outputPrefix=${chr}
-  ${params.CoCoRVFolder}/utilities/vcfQCAndNormalize.sh ${vcfFile} \${outputPrefix} ${params.refFASTA}
+  ${params.CoCoRVFolder}/utilities/vcfQCAndNormalize.sh ${vcfFile} \${outputPrefix} ${reference}
   """
 }
 
@@ -105,6 +104,9 @@ process annotate {
     path(normalizedQCedVCFFile)
     path(indexFile)
     val build
+    path annovarFolder
+    path vepFolder
+    path reference
 
   output:
     val("${chr}"), emit: chr
@@ -122,23 +124,23 @@ process annotate {
 
   if (build == "GRCh37") {
       refbuild="hg19"  
-      lofteeFolder = params.vepFolder + "/other_data/loftee/loftee"
-      lofteeDataFolder = params.vepFolder + "/other_data/loftee/data"
-      caddSNV = params.vepFolder + "/other_data/CADD/hg19/v1.7/whole_genome_SNVs.tsv.gz"
-      caddIndel = params.vepFolder + "/other_data/CADD/hg19/v1.7/gnomad.genomes-exomes.r4.0.indel.tsv.gz"
-      spliceAISNV = params.vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.snv.hg19.vcf.gz"
-      spliceAIIndel = params.vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.indel.hg19.vcf.gz"
-      VEPCACHE = params.vepFolder + "/ensembl-vep/cache"
+      lofteeFolder = vepFolder + "/other_data/loftee/loftee"
+      lofteeDataFolder = vepFolder + "/other_data/loftee/data"
+      caddSNV = vepFolder + "/other_data/CADD/hg19/v1.7/whole_genome_SNVs.tsv.gz"
+      caddIndel = vepFolder + "/other_data/CADD/hg19/v1.7/gnomad.genomes-exomes.r4.0.indel.tsv.gz"
+      spliceAISNV = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.snv.hg19.vcf.gz"
+      spliceAIIndel = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.indel.hg19.vcf.gz"
+      VEPCACHE = vepFolder + "/ensembl-vep/cache"
   }
   else if (build == "GRCh38") {
       refbuild="hg38"  
-      lofteeFolder = params.vepFolder + "/other_data/loftee/loftee"
-      lofteeDataFolder = params.vepFolder + "/other_data/loftee/data"
-      caddSNV = params.vepFolder + "/other_data/CADD/hg38/v1.7/whole_genome_SNVs.tsv.gz"
-      caddIndel = params.vepFolder + "/other_data/CADD/hg38/v1.7/gnomad.genomes-exomes.r4.0.indel.tsv.gz"
-      spliceAISNV = params.vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.snv.hg38.vcf.gz"
-      spliceAIIndel = params.vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.indel.hg38.vcf.gz"
-      VEPCACHE = params.vepFolder + "/ensembl-vep/cache_hg38"
+      lofteeFolder = vepFolder + "/other_data/loftee/loftee"
+      lofteeDataFolder = vepFolder + "/other_data/loftee/data"
+      caddSNV = vepFolder + "/other_data/CADD/hg38/v1.7/whole_genome_SNVs.tsv.gz"
+      caddIndel = vepFolder + "/other_data/CADD/hg38/v1.7/gnomad.genomes-exomes.r4.0.indel.tsv.gz"
+      spliceAISNV = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.snv.hg38.vcf.gz"
+      spliceAIIndel = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.indel.hg38.vcf.gz"
+      VEPCACHE = vepFolder + "/ensembl-vep/cache_hg38"
   }
 
   """
@@ -147,10 +149,10 @@ process annotate {
   else 
     outputPrefix="${chr}.annotated.annovar"
   fi
-  bash ${params.CoCoRVFolder}/utilities/annotate_docker.sh ${normalizedQCedVCFFile} ${params.annovarFolder} ${refbuild} \${outputPrefix} ${params.VCFAnno} ${params.toml} ${params.protocol} ${params.operation}
+  bash ${params.CoCoRVFolder}/utilities/annotate_docker.sh ${normalizedQCedVCFFile} ${annovarFolder} ${refbuild} \${outputPrefix} ${params.VCFAnno} ${params.toml} ${params.protocol} ${params.operation}
 
   if [[ ${params.addVEP} == "T" ]]; then
-    bash ${params.CoCoRVFolder}/utilities/annotateVEPWithOptions_docker_no_mane_v3.sh ${chr}.annotated.annovar.vcf.gz ${build} ${chr}.annotated ${params.refFASTA} ${lofteeFolder} ${lofteeDataFolder} ${caddSNV} ${caddIndel} ${spliceAISNV} ${spliceAIIndel} ${params.AM} ${params.REVEL} ${vepThreads} ${params.VEPAnnotations} ${VEPCACHE}
+    bash ${params.CoCoRVFolder}/utilities/annotateVEPWithOptions_docker_no_mane_v3.sh ${chr}.annotated.annovar.vcf.gz ${build} ${chr}.annotated ${reference} ${lofteeFolder} ${lofteeDataFolder} ${caddSNV} ${caddIndel} ${spliceAISNV} ${spliceAIIndel} ${params.AM} ${params.REVEL} ${vepThreads} ${params.VEPAnnotations} ${VEPCACHE}
   fi
   """
 }
@@ -159,12 +161,10 @@ process skipAnnotation {
   tag "${chr}"
   label 'process_single'
   publishDir "${params.outdir}/annotation", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
-    val(chr)
-    path(normalizedQCedVCFFile)
-    path(indexFile)
+    tuple val(chr), path(annotated), path(annotatedTbi)
 
   output:
     val("${chr}"), emit: chr
@@ -172,14 +172,7 @@ process skipAnnotation {
     path("${chr}.annotated.vcf.gz.tbi"), emit: annotatedFileIndex
 
   script:
-  if (chr == "NA") {
-    annotated = params.caseAnnotatedVCFPrefix + params.caseAnnotatedVCFSuffix
-  } else {
-    annotated = params.caseAnnotatedVCFPrefix + chr + params.caseAnnotatedVCFSuffix
-  }
   """
-  ln -s ${annotated} ${chr}.annotated.vcf.gz
-  ln -s ${annotated}.tbi ${chr}.annotated.vcf.gz.tbi
   """
 }
 
@@ -236,23 +229,16 @@ process caseAnnotationGDS {
 process skipGenotypeGDS {
   tag "${chr}"
   label 'process_single'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
-    val(chr)
-    path(normalizedQCedVCFFile)
-    path(indexFile)
+    tuple val(chr), path(genotypeGDSFile)
 
   output: 
     tuple val("${chr}"),
           path("${chr}.biallelic.leftnorm.ABCheck.vcf.gz.gds")
 
   script:
-  if (chr == "NA") {
-    genotypeGDSFile = params.caseGenotypeGDSPrefix + params.caseGenotypeGDSSuffix
-  } else {
-    genotypeGDSFile = params.caseGenotypeGDSPrefix + chr + params.caseGenotypeGDSSuffix
-  }
   """
   ln -s ${genotypeGDSFile} ${chr}.biallelic.leftnorm.ABCheck.vcf.gz.gds
   """
@@ -261,21 +247,16 @@ process skipGenotypeGDS {
 process skipAnnotationGDS {
   tag "${chr}"
   label 'process_single'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input:
-    tuple val(chr), path(genotypeGDSFile)
+    tuple val(chr), path(annotationGDSFile)
 
   output: 
     tuple val("${chr}"),
           path("${chr}.annotated.vcf.gz.gds")
 
   script:
-  if (chr == "NA") {
-    annotationGDSFile = params.caseAnnotationGDSPrefix + params.caseAnnotationGDSSuffix
-  } else {
-    annotationGDSFile = params.caseAnnotationGDSPrefix + chr + params.caseAnnotationGDSSuffix
-  }
   """
   ln -s ${annotationGDSFile} ${chr}.annotated.vcf.gz.gds
   """
@@ -285,26 +266,27 @@ process extractGnomADPositions {
   tag "${chr}"
   label 'process_single'
   publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input: 
     val(chr)
     path(normalizedQCedVCFFile)
     path(indexFile)
+    path(gnomADPCPosition)
 
   output: 
     path "${chr}.extracted.vcf.gz"
 
   script:
   """
-  bcftools view -R ${params.gnomADPCPosition} -Oz -o ${chr}.extracted.vcf.gz ${normalizedQCedVCFFile}
+  bcftools view -R ${gnomADPCPosition} -Oz -o ${chr}.extracted.vcf.gz ${normalizedQCedVCFFile}
   """
 }
 
 process mergeExtractedPositions {
   label 'process_single'
   publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input: 
     path extractedVCFFile
@@ -321,10 +303,12 @@ process mergeExtractedPositions {
 process RFPrediction {
   label 'process_single'
   publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v5'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   input: 
     path VCFForPrediction
+    path loadingPath
+    path rfModelPath
 
   output: 
     path "PC.population.output.gz"
@@ -339,7 +323,7 @@ process RFPrediction {
       threshold = "0.75"
   }
   """
-  bash ${params.CoCoRVFolder}/utilities/gnomADPCAndAncestry_docker.sh ${params.CoCoRVFolder} ${params.loadingPath} ${params.rfModelPath} ${VCFForPrediction} ${params.build} "PC.population.output.gz" ${threshold} "casePopulation.txt"
+  bash ${params.CoCoRVFolder}/utilities/gnomADPCAndAncestry_docker.sh ${params.CoCoRVFolder} ${loadingPath} ${rfModelPath} ${VCFForPrediction} ${params.build} "PC.population.output.gz" ${threshold} "casePopulation.txt"
   """
 }
 
@@ -353,9 +337,13 @@ process CoCoRV {
   maxRetries 0
 
   input: 
-    tuple val(chr), path(caseGenotypeGDS), path(caseAnnoGDS) 
+    tuple val(chr), path(caseGenotypeGDS), path(caseAnnoGDS), path(controlCount), path(controlAnnotated)
     path intersectBed
     path ancestryFile
+    path ACANConfig
+    path variantExclude
+    path highLDVariantFile
+    path caseSample
 
   output: 
     path("${chr}.association.tsv"), emit: association_perChr
@@ -363,31 +351,6 @@ process CoCoRV {
     path("${chr}.control.group"), emit: controlVariants_perChr
 
   script:
-  if (chr == "NA") {
-    controlAnnotated = params.controlAnnoPrefix + params.controlAnnoSuffix
-    controlCount = params.controlCountPrefix + params.controlCountSuffix 
-  } else {
-    controlAnnotated = params.controlAnnoPrefix + chr+params.controlAnnoSuffix
-    controlCount = params.controlCountPrefix + chr + params.controlCountSuffix 
-  }
-
-  if (params.build == "GRCh37") {
-      ACANConfig = params.controlDataFolder + "/stratified_config_gnomad.txt"
-      variantExclude = params.controlDataFolder + "/gnomAD.exclude.allow.segdup.lcr.v3.txt.gz"
-      highLDVariantFile = params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds"
-      threshold = "0.9"
-  }
-  else if (params.build == "GRCh38") {
-      ACANConfig = params.controlDataFolder + "/stratified_config_gnomadV4.asj.txt"
-      highLDVariantFile = "NA"
-      threshold = "0.75"
-      if (params.gnomADVersion == "v4exome") {
-          variantExclude = params.controlDataFolder + "/gnomAD41WGSExtraExcludeInCodingExcludeTAS2R46.txt.gz"
-      }
-      else if (params.gnomADVersion == "v4genome") {
-          variantExclude = "NA"
-      }
-  }
 
   """
   otherOptions=""
@@ -403,10 +366,10 @@ process CoCoRV {
   if [[ "${params.annotationUsed}" != "NA" ]]; then
     otherOptions="\${otherOptions} --annotationUsed ${params.annotationUsed}"
   fi
-  if [[ "${highLDVariantFile}" != "NA" ]]; then
+  if [[ "${params.gnomADVersion}" == "v2exome" ]]; then
     otherOptions="\${otherOptions} --highLDVariantFile ${highLDVariantFile}"
   fi
-  if [[ "${variantExclude}" != "NA" ]]; then
+  if [[ "${params.gnomADVersion}" == "v2exome" || "${params.gnomADVersion}" == "v4exome" ]]; then
     otherOptions="\${otherOptions} --variantExclude ${variantExclude}"
   fi
   if [[ "${params.variantInclude}" != "NA" ]]; then
@@ -414,7 +377,7 @@ process CoCoRV {
   fi
 
   Rscript ${params.CoCoRVFolder}/utilities/CoCoRV_wrapper.R \
-      --sampleList ${params.caseSample} \
+      --sampleList ${caseSample} \
       --outputPrefix ${chr} \
       --AFMax ${params.AFMax} \
       --bed ${intersectBed} \
@@ -441,7 +404,7 @@ process CoCoRV {
 }
 
 process mergeCoCoRVResults {
-  label 'process_low'
+  label 'process_medium'
   publishDir "${params.outdir}/CoCoRV", mode: 'copy'
   container 'stithi/cocorv-nextflow-r:v5'
 
@@ -480,7 +443,7 @@ process mergeCoCoRVResults {
 }
 
 process QQPlotAndFDR {
-  label 'process_low'
+  label 'process_medium'
   publishDir "${params.outdir}/CoCoRV", mode: 'copy'
   container 'stithi/cocorv-nextflow-r:v5'
 
@@ -507,9 +470,9 @@ process QQPlotAndFDR {
 }
 
 process postCheck {
-  label 'process_low'
+  label 'process_high_memory'
   publishDir "${params.outdir}/CoCoRV", mode: 'copy'
-  container 'stithi/cocorv-nextflow-python:v6'
+  container 'stithi/cocorv-nextflow-python:v7'
 
   errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
   maxRetries 1
@@ -532,6 +495,6 @@ process postCheck {
 
   script:
   """
-  bash ${params.CoCoRVFolder}/utilities/checkFPGenes.sh ${params.CoCoRVFolder} ${associationResult} ${topK} ${caseControl} ${params.build} ${params.caseSample} ${params.addVEP}
+  bash ${params.CoCoRVFolder}/utilities/checkFPGenes.sh ${params.CoCoRVFolder} ${associationResult} ${topK} ${caseControl} ${params.build} ${caseSample} ${params.addVEP}
   """
 }
