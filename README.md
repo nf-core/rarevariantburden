@@ -21,7 +21,7 @@
 
 **nf-core/rarevariantburden** is a bioinformatics pipeline that performs consistent summary count based rare variant burden test, which is useful when we only have sequenced cases/patients data, no matched control data, here we provided pre-processed and annotated public summary count data, such as gnomAD data, which can be used for rare variant burden test and can be used to identify disease-predisposition genes present in the case study.
 
-Some key features of CoCoRV tool:
+Some key features of our pipeline:
 
 * Consistent filtering is applied to make sure the same set of high quality variants are used.
 * It can stratify cases into different ethnicity groups, and perform stratified analysis with group-matched control summary counts.
@@ -46,12 +46,12 @@ Some key features of CoCoRV tool:
     <img alt="nf-core/raredisease workflow" src="docs/images/raredisease_metromap_light.png">
 </picture>
 
-1. Split the case joint called and VQSR applied VCF files chromosomewise (Using BCFtools(https://samtools.github.io/bcftools/bcftools.html))
-2. Normalize and QC the splitted case VCF files (Using BCFtools(https://samtools.github.io/bcftools/bcftools.html))
-3. Annotate normalized and QC'd VCF files with Annovar(https://annovar.openbioinformatics.org/en/latest/) and VEP(https://www.ensembl.org/vep) (VEP annotation is optional)
+1. Split the case joint called and VQSR applied VCF files chromosomewise (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
+2. Normalize and QC the splitted case VCF files (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
+3. Annotate normalized and QC'd VCF files with [Annovar](https://annovar.openbioinformatics.org/en/latest/) and [VEP](https://www.ensembl.org/vep) (VEP annotation is optional)
 4. Convert the normalized and annotated VCF files to GDS format, which is easier to process in R (Using R seqarray)
 5. Predict the ethnicity of the case samples (Using gnomAD random forest classifier)
-6. Perform assiciation test for each VCF file using our CoCoRV(Consistent summary Count based Rare Variant burden test) R package (https://bitbucket.org/Wenan/cocorv/)
+6. Perform assiciation test for each VCF file using our [CoCoRV](https://bitbucket.org/Wenan/cocorv/) (Consistent summary Count based Rare Variant burden test) R package
 7. Merge association test results
 8. Calculate false positive rate (FDR) from merged results, plot QQ plot and lambda value using different R libraries
 
@@ -76,7 +76,7 @@ CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
 -->
-First, prepare the joint called and VQSR applied VCF file from your case study. You can use nf-core/sarek(https://nf-co.re/sarek/) GATK joint calling pipeline (https://nf-co.re/sarek/3.5.1/docs/output/#gatk-joint-germline-variant-calling) to prepare a joint called and VQSR applied VCF file from your sample VCF files. You also need to prepare a text file containing sample IDs, one sample ID per line.
+First, prepare the joint called and VQSR applied VCF file from your case study. You can use [nf-core/sarek](https://nf-co.re/sarek/) GATK joint calling pipeline (https://nf-co.re/sarek/3.5.1/docs/output/#gatk-joint-germline-variant-calling) to prepare a joint called and VQSR applied VCF file from your sample VCF files. You also need to prepare a text file containing sample IDs, one sample ID per line.
 
 For control data, you need to download the control data from our Amazon AWS s3 bucket. We provide 3 different control datasets, For build GRCH37, we have gnomADv2exome data, for build GRCh38, we have gnomADv4.1exome and gnomADv4.1genome data as controls.
 
@@ -89,9 +89,10 @@ After installing this, you can use "aws s3" command to list any s3 bucket folder
 https://docs.aws.amazon.com/cli/latest/reference/s3/
 
 Here are the s3 bucket paths of the 3 gnomAD control datasets:
-s3://cocorv-resource-files/gnomADv2exome/
-s3://cocorv-resource-files/gnomADv4.1exome/
-s3://cocorv-resource-files/gnomADv4.1genome/
+
+* s3://cocorv-resource-files/gnomADv2exome/
+* s3://cocorv-resource-files/gnomADv4.1exome/
+* s3://cocorv-resource-files/gnomADv4.1genome/
 
 To download the data, you need to run commands like this:
 ```bash
@@ -105,8 +106,9 @@ aws s3 ls s3://cocorv-resource-files/
 You also need to download the annovar and VEP resource folders for running Annovar and VEP annotation.
 
 Here are the s3 bucket paths of the annotation tool datasets:
-s3://cocorv-resource-files/annovarFolder/
-s3://cocorv-resource-files/vepFolder/
+
+* s3://cocorv-resource-files/annovarFolder/
+* s3://cocorv-resource-files/vepFolder/
 
 Now, you can run the pipeline using:
 
