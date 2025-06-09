@@ -9,21 +9,22 @@ include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pi
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_rarevariantburden_pipeline'
 
 include {
-  splitJointVCF;
-  coverageIntersect;
-  normalizeQCAfterSplit;
-  normalizeQC;
-  annotate;
-  skipAnnotation;
-  caseGenotypeGDS;
-  caseAnnotationGDS;
-  extractGnomADPositions;
-  mergeExtractedPositions;
-  RFPrediction;
-  CoCoRV;
-  mergeCoCoRVResults;
-  QQPlotAndFDR;
-  postCheck} from '../modules/local/modules.nf'
+    splitJointVCF;
+    coverageIntersect;
+    normalizeQCAfterSplit;
+    normalizeQC;
+    annotate;
+    skipAnnotation;
+    caseGenotypeGDS;
+    caseAnnotationGDS;
+    extractGnomADPositions;
+    mergeExtractedPositions;
+    RFPrediction;
+    CoCoRV;
+    mergeCoCoRVResults;
+    QQPlotAndFDR;
+    postCheck
+} from '../modules/local/modules.nf'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -36,10 +37,10 @@ workflow RAREVARIANTBURDEN {
     take:
     caseJointVCF // caseJointVCF read in from --caseJointVCF
     caseSample // caseSample read in from --caseSample
-    
+
     main:
 
-    // coverage  
+    // coverage
     if (params.caseBed == "NA") {
         intersectChannel = Channel.value(params.controlBed)
     } else {
@@ -52,15 +53,15 @@ workflow RAREVARIANTBURDEN {
     chromChannel = Channel.fromList(Arrays.asList(chromosomes))
 
     // split joint VCF by chromosome
-    // normalize and QC  
+    // normalize and QC
     if (params.caseVCFFileList == "NA") {
         caseJointVCFtbi = params.caseJointVCF + ".tbi"
         splitJointVCF(params.caseJointVCF, caseJointVCFtbi, chromChannel)
         normalizeQCAfterSplit(splitJointVCF.out, params.refFASTA, params.refFASTA + ".fai", params.refFASTA + ".gzi")
         normalizeQCChannel = normalizeQCAfterSplit.out
     } else {
-        caseVCF_ch = Channel            
-			            .fromPath(params.caseVCFFileList)               
+        caseVCF_ch = Channel
+			            .fromPath(params.caseVCFFileList)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.chr, file(row.vcf)) } // Create a tuple of chr and case VCF file path
 
@@ -73,8 +74,8 @@ workflow RAREVARIANTBURDEN {
         annotate(normalizeQCChannel, params.build, params.annovarFolder, params.vepFolder, params.refFASTA)
         annotateChannel = annotate.out
     } else {
-        annotate_ch = Channel            
-			                    .fromPath(params.caseAnnotatedVCFFileList)               
+        annotate_ch = Channel
+			                    .fromPath(params.caseAnnotatedVCFFileList)
                                 .splitCsv(header: true)
                                 .map { row -> tuple(row.chr, file(row.vcf), file(row.index)) } // Create a tuple of chr, annotated VCF file path, index file path
 
@@ -82,7 +83,7 @@ workflow RAREVARIANTBURDEN {
         annotateChannel = skipAnnotation.out
     }
 
-    if (params.caseGenotypeGDSFileList == "NA" && params.caseAnnotationGDSFileList == "NA") {   
+    if (params.caseGenotypeGDSFileList == "NA" && params.caseAnnotationGDSFileList == "NA") {
         // case genoypte vcf to gds
         caseGenotypeGDS(normalizeQCChannel)
         caseGenotypeGDSChannel = caseGenotypeGDS.out
@@ -93,14 +94,14 @@ workflow RAREVARIANTBURDEN {
     }
     else {
         //skip annotation and GDS conversion
-        caseGenotypeGDSChannel = Channel            
-			            .fromPath(params.caseGenotypeGDSFileList)               
+        caseGenotypeGDSChannel = Channel
+			            .fromPath(params.caseGenotypeGDSFileList)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
 
 
-        caseAnnotationGDSChannel = Channel            
-			            .fromPath(params.caseAnnotationGDSFileList)               
+        caseAnnotationGDSChannel = Channel
+			            .fromPath(params.caseAnnotationGDSFileList)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
 
@@ -123,13 +124,13 @@ workflow RAREVARIANTBURDEN {
     // run CoCoRV
     // RFPrediction.out.view()
 
-    controlGenotypeGDSChannel = Channel            
-			            .fromPath(params.controlGenotypeGDSFileList)               
+    controlGenotypeGDSChannel = Channel
+			            .fromPath(params.controlGenotypeGDSFileList)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
 
-    controlAnnotationGDSChannel = Channel            
-			            .fromPath(params.controlAnnotationGDSFileList)               
+    controlAnnotationGDSChannel = Channel
+			            .fromPath(params.controlAnnotationGDSFileList)
                         .splitCsv(header: true)
                         .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
 
@@ -137,7 +138,7 @@ workflow RAREVARIANTBURDEN {
     caseChannel = caseGenotypeGDSChannel.join(caseAnnotationGDSChannel)
 
     if (params.build == "GRCh37") {
-        CoCoRV(caseChannel.join(controlChannel), 
+        CoCoRV(caseChannel.join(controlChannel),
             intersectChannel,
             populationChannel,
             params.controlDataFolder + "/stratified_config_gnomad.txt",
@@ -146,7 +147,7 @@ workflow RAREVARIANTBURDEN {
             params.caseSample)
     }
     else if (params.build == "GRCh38") {
-        CoCoRV(caseChannel.join(controlChannel), 
+        CoCoRV(caseChannel.join(controlChannel),
             intersectChannel,
             populationChannel,
             params.controlDataFolder + "/stratified_config_gnomadV4.asj.txt",
@@ -156,7 +157,7 @@ workflow RAREVARIANTBURDEN {
     }
 
     // merge CoCoRV results
-    mergeCoCoRVResults(CoCoRV.out.association_perChr.collect(), CoCoRV.out.caseVariants_perChr.collect(), 
+    mergeCoCoRVResults(CoCoRV.out.association_perChr.collect(), CoCoRV.out.caseVariants_perChr.collect(),
         CoCoRV.out.controlVariants_perChr.collect())
 
     // QQ plot and FDR
@@ -164,7 +165,7 @@ workflow RAREVARIANTBURDEN {
 
     //postCheck(mergeCoCoRVResults.out[0], params.topK, params.caseControl)
 
-    postCheck(mergeCoCoRVResults.out.association_res, params.topK, params.caseControl, params.build, params.caseSample, 
+    postCheck(mergeCoCoRVResults.out.association_res, params.topK, params.caseControl, params.build, params.caseSample,
         normalizeQCChannel.normalizedQCedVCFFile.collect(),
         normalizeQCChannel.normalizedQCedVCFFileIndex.collect(),
         annotateChannel.annotatedFile.collect(),
