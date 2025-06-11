@@ -17,6 +17,16 @@
 
 [![Get help on Slack](http://img.shields.io/badge/slack-nf--core%20%23rarevariantburden-4A154B?labelColor=000000&logo=slack)](https://nfcore.slack.com/channels/rarevariantburden)[![Follow on Twitter](http://img.shields.io/badge/twitter-%40nf__core-1DA1F2?labelColor=000000&logo=twitter)](https://twitter.com/nf_core)[![Follow on Mastodon](https://img.shields.io/badge/mastodon-nf__core-6364ff?labelColor=FFFFFF&logo=mastodon)](https://mstdn.science/@nf_core)[![Watch on YouTube](http://img.shields.io/badge/youtube-nf--core-FF0000?labelColor=000000&logo=youtube)](https://www.youtube.com/c/nf-core)
 
+#### TOC
+
+- [Introduction](#introduction)
+- [Pipeline summary](#pipeline-summary)
+- [Usage](#usage)
+- [Pipeline output](#pipeline-output)
+- [Credits](#credits)
+- [Contributions and Support](#contributions-and-support)
+- [Citations](#citations)
+
 ## Introduction
 
 **nf-core/rarevariantburden** is a bioinformatics pipeline that performs consistent summary count based rare variant burden test, which is useful when we only have sequenced cases/patients data, no matched control data, here we provided pre-processed and annotated public summary count data, such as gnomAD data, which can be used for rare variant burden test and can be used to identify disease-predisposition genes present in the case study.
@@ -42,8 +52,8 @@ Some key features of our pipeline:
 ## Pipeline summary
 
 <picture align="center">
-    <source media="(prefers-color-scheme: dark)" srcset="docs/images/raredisease_metromap_dark.png">
-    <img alt="nf-core/raredisease workflow" src="docs/images/raredisease_metromap_light.png">
+    <source media="(prefers-color-scheme: dark)" srcset="docs/images/rarevariantburden_metromap_dark.png">
+    <img alt="nf-core/raredisease workflow" src="docs/images/rarevariantburden_metromap_light.png">
 </picture>
 
 1. Split the case joint called and VQSR applied VCF files chromosomewise (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
@@ -76,17 +86,13 @@ CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
 -->
-First, prepare the joint called and VQSR applied VCF file from your case study. You can use [nf-core/sarek](https://nf-co.re/sarek/) GATK joint calling pipeline (https://nf-co.re/sarek/3.5.1/docs/output/#gatk-joint-germline-variant-calling) to prepare a joint called and VQSR applied VCF file from your sample VCF files. You also need to prepare a text file containing sample IDs, one sample ID per line.
+First, prepare the joint called and VQSR applied VCF file from your case study. You can use [nf-core/sarek](https://nf-co.re/sarek/) pipeline's [GATK joint calling module](https://nf-co.re/sarek/3.5.1/docs/output/#gatk-joint-germline-variant-calling) to prepare a joint called and VQSR applied VCF file from your sample VCF files. You also need to prepare a text file containing sample IDs, one sample ID per line.
 
 For control data, you need to download the control data from our Amazon AWS s3 bucket. We provide 3 different control datasets, For build GRCH37, we have gnomADv2exome data, for build GRCh38, we have gnomADv4.1exome and gnomADv4.1genome data as controls.
 
-As this is a huge dataset, it is better to use Amazon AWS command line tool aws-cli to download the data.
+As the control data is a huge dataset, it is better to use Amazon AWS command line tool [aws-cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to download the data.
 
-Here is how you can install aws-cli:
-https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html
-
-After installing this, you can use "aws s3" command to list any s3 bucket folder, or download any folder or files from s3.
-https://docs.aws.amazon.com/cli/latest/reference/s3/
+After installing this, you can use "aws s3" command to list any s3 bucket folder, or download any folder or files from s3. You will find the s3 commands list [in here](https://docs.aws.amazon.com/cli/latest/reference/s3/).
 
 Here are the s3 bucket paths of the 3 gnomAD control datasets:
 
@@ -94,7 +100,7 @@ Here are the s3 bucket paths of the 3 gnomAD control datasets:
 * s3://cocorv-resource-files/gnomADv4.1exome/
 * s3://cocorv-resource-files/gnomADv4.1genome/
 
-To download the data, you need to run commands like this:
+To download the data, you need to run following command:
 ```bash
 cd /local-dir-path-where-you-want-download/
 aws s3 cp s3://cocorv-resource-files/gnomADv2exome/ . --recursive
@@ -110,7 +116,7 @@ Here are the s3 bucket paths of the annotation tool datasets:
 * s3://cocorv-resource-files/annovarFolder/
 * s3://cocorv-resource-files/vepFolder/
 
-Now, you can run the pipeline using:
+Now, you can run the pipeline using the following command:
 
 <!-- TODO nf-core: update the following command to include all required parameters for a minimal example -->
 

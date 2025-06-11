@@ -118,7 +118,9 @@ process annotate {
     caddSNV = null
     caddIndel = null
     spliceAISNV = null
-    spliceAIIndel =
+    spliceAIIndel = null
+    AM = null
+    REVEL = null
     VEPCACHE = null
     vepThreads = 6
 
@@ -130,6 +132,8 @@ process annotate {
         caddIndel = vepFolder + "/other_data/CADD/hg19/v1.7/gnomad.genomes-exomes.r4.0.indel.tsv.gz"
         spliceAISNV = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.snv.hg19.vcf.gz"
         spliceAIIndel = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.indel.hg19.vcf.gz"
+        AM = vepFolder + "/other_data/AlphaMissense"
+        REVEL = vepFolder + "/other_data/REVEL"
         VEPCACHE = vepFolder + "/ensembl-vep/cache"
     }
     else if (build == "GRCh38") {
@@ -140,6 +144,8 @@ process annotate {
         caddIndel = vepFolder + "/other_data/CADD/hg38/v1.7/gnomad.genomes-exomes.r4.0.indel.tsv.gz"
         spliceAISNV = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.snv.hg38.vcf.gz"
         spliceAIIndel = vepFolder + "/other_data/SpliceAI/spliceai_scores.raw.indel.hg38.vcf.gz"
+        AM = vepFolder + "/other_data/AlphaMissense"
+        REVEL = vepFolder + "/other_data/REVEL"
         VEPCACHE = vepFolder + "/ensembl-vep/cache_hg38"
     }
 
@@ -152,7 +158,7 @@ process annotate {
     bash ${params.CoCoRVFolder}/utilities/annotate_docker.sh ${normalizedQCedVCFFile} ${annovarFolder} ${refbuild} \${outputPrefix} ${params.VCFAnno} ${params.toml} ${params.protocol} ${params.operation}
 
     if [[ ${params.addVEP} == "T" ]]; then
-        bash ${params.CoCoRVFolder}/utilities/annotateVEPWithOptions_docker_no_mane_v3.sh ${chr}.annotated.annovar.vcf.gz ${build} ${chr}.annotated ${reference} ${lofteeFolder} ${lofteeDataFolder} ${caddSNV} ${caddIndel} ${spliceAISNV} ${spliceAIIndel} ${params.AM} ${params.REVEL} ${vepThreads} ${params.VEPAnnotations} ${VEPCACHE}
+        bash ${params.CoCoRVFolder}/utilities/annotateVEPWithOptions_docker_no_mane_v3.sh ${chr}.annotated.annovar.vcf.gz ${build} ${chr}.annotated ${reference} ${lofteeFolder} ${lofteeDataFolder} ${caddSNV} ${caddIndel} ${spliceAISNV} ${spliceAIIndel} ${AM} ${REVEL} ${vepThreads} ${params.VEPAnnotations} ${VEPCACHE}
     fi
     """
 }
