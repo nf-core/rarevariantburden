@@ -33,11 +33,11 @@
 
 Some key features of our pipeline:
 
-* Consistent filtering is applied to make sure the same set of high quality variants are used.
-* It can stratify cases into different ethnicity groups, and perform stratified analysis with group-matched control summary counts.
-* For recessive models, it can exclude double heterozygous due to high linkage disequilibrium in populations.
-* Also provides accurate inflation factor estimate, QQ plot, and powerful FDR control for discrete count data, whose p-value distribution under the null is far from the uniform distribution when the alleles are very rare.
-* It supports gnomAD v2 exome (GRCh37) data, and gnomAD v4.1 exome (GRCh38) data, and gnomAD v4.1 genome (GRCh38) data as control.
+- Consistent filtering is applied to make sure the same set of high quality variants are used.
+- It can stratify cases into different ethnicity groups, and perform stratified analysis with group-matched control summary counts.
+- For recessive models, it can exclude double heterozygous due to high linkage disequilibrium in populations.
+- Also provides accurate inflation factor estimate, QQ plot, and powerful FDR control for discrete count data, whose p-value distribution under the null is far from the uniform distribution when the alleles are very rare.
+- It supports gnomAD v2 exome (GRCh37) data, and gnomAD v4.1 exome (GRCh38) data, and gnomAD v4.1 genome (GRCh38) data as control.
 
 <!-- TODO nf-core:
    Complete this sentence with a 2-3 sentence summary of what types of data the pipeline ingests, a brief overview of the
@@ -64,7 +64,7 @@ Some key features of our pipeline:
 6. Perform assiciation test for each VCF file using our [CoCoRV](https://bitbucket.org/Wenan/cocorv/) (Consistent summary Count based Rare Variant burden test) R package
 7. Merge association test results
 8. Calculate false positive rate (FDR) from merged results, plot QQ plot and lambda value using different R libraries
-
+9. For top K genes, generate the list of samples and associated variants along with the annotations for the variants, this list will help the users to further check the top genes and their variants
 
 ## Usage
 
@@ -86,6 +86,7 @@ CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
 Each row represents a fastq file (single-end) or a pair of fastq files (paired end).
 
 -->
+
 First, prepare the joint called and VQSR applied VCF file from your case study. You can use [nf-core/sarek](https://nf-co.re/sarek/) pipeline's [GATK joint calling module](https://nf-co.re/sarek/3.5.1/docs/output/#gatk-joint-germline-variant-calling) to prepare a joint called and VQSR applied VCF file from your sample VCF files. You also need to prepare a text file containing sample IDs, one sample ID per line.
 
 For control data, you need to download the control data from our Amazon AWS s3 bucket. We provide 3 different control datasets, For build GRCH37, we have gnomADv2exome data, for build GRCh38, we have gnomADv4.1exome and gnomADv4.1genome data as controls.
@@ -96,25 +97,29 @@ After installing this, you can use "aws s3" command to list any s3 bucket folder
 
 Here are the s3 bucket paths of the 3 gnomAD control datasets:
 
-* s3://cocorv-resource-files/gnomADv2exome/
-* s3://cocorv-resource-files/gnomADv4.1exome/
-* s3://cocorv-resource-files/gnomADv4.1genome/
+- s3://cocorv-resource-files/gnomADv2exome/
+- s3://cocorv-resource-files/gnomADv4.1exome/
+- s3://cocorv-resource-files/gnomADv4.1genome/
 
 To download the data, you need to run following command:
+
 ```bash
 cd /local-dir-path-where-you-want-download/
 aws s3 cp s3://cocorv-resource-files/gnomADv2exome/ . --recursive
 ```
+
 You can check all resource files for our pipeline using this command:
+
 ```bash
 aws s3 ls s3://cocorv-resource-files/
 ```
+
 You also need to download the annovar and VEP resource folders for running Annovar and VEP annotation.
 
 Here are the s3 bucket paths of the annotation tool datasets:
 
-* s3://cocorv-resource-files/annovarFolder/
-* s3://cocorv-resource-files/vepFolder/
+- s3://cocorv-resource-files/annovarFolder/
+- s3://cocorv-resource-files/vepFolder/
 
 Now, you can run the pipeline using the following command:
 
@@ -164,7 +169,8 @@ For further information or help, don't hesitate to get in touch on the [Slack `#
 <!-- If you use nf-core/rarevariantburden for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 <!-- TODO nf-core: Add bibliography of tools and data used in your pipeline -->
-To learn more about the original CoCoRV tool, please look at our paper published in *Nature Communications* [Pubmed link](https://pubmed.ncbi.nlm.nih.gov/35545612/).
+
+To learn more about the original CoCoRV tool, please look at our paper published in _Nature Communications_ [Pubmed link](https://pubmed.ncbi.nlm.nih.gov/35545612/).
 
 An extensive list of references for the tools used by the pipeline can be found in the [`CITATIONS.md`](CITATIONS.md) file.
 
