@@ -351,7 +351,7 @@
             }
         },
         "post_check_options": {
-            "title": "Post check results options",
+            "title": "Post check options",
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define different pipeline parameters for post checking the CoCoRV results by generating variant sample info for top K genes.",

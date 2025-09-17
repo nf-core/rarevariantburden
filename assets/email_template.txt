@@ -4,8 +4,9 @@
   |\\ | |__  __ /  ` /  \\ |__) |__         }  {
   | \\| |       \\__, \\__/ |  \\ |___     \\`-._,-`-,
                                         `._,._,'
-  nf-core/rarevariantburden ${version}
+  nf-core/rarevariantburden v${version}
 ----------------------------------------------------
+
 Run Name: $runName
 
 <% if (success){
