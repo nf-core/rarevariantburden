@@ -275,7 +275,7 @@
                 },
                 "VEPAnnotations": {
                     "type": "string",
-                    "default": "AM,SPLICEAI,LOFTEE",
+                    "default": "AM,SPLICEAI,LOFTEE,CADD",
                     "description": "VEP annotation parameters, list of VEP plugins to run",
                     "help_text": "VEP annotation parameters, list of VEP plugins to run"
                 },
