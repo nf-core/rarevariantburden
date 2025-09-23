@@ -135,7 +135,7 @@ chrSet: '21 22'
 <...>
 ```
 
-A sample params file in yaml format for running with case VCF file list and for VEP annotation looks like this:
+A sample params file in yaml format for running with case VCF file list and for both annovar and VEP annotation looks like this:
 
 ```yaml title="params.yaml"
 caseJointVCF: 'NA'
@@ -147,7 +147,7 @@ vepFolder: 'vepFolder'
 reference: 'GRCh38'
 gnomADVersion: 'v4exome'
 outdir: './results/'
-annotationTool: 'VEP'
+annotationTool: 'ANNOVAR_VEP'
 variantGroup: 'vep_lof_nosplicing'
 variantGroupCustom: 'variantGroupCustom.txt'
 groupColumn: 'SYMBOL'

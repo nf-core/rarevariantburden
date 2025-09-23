@@ -120,7 +120,7 @@ process annotate_annovar {
 
 process annotate_vep {
     tag "${chr}"
-    label 'process_medium'
+    label 'process_high'
     publishDir "${params.outdir}/annotation", mode: 'copy'
     container 'stithi/cocorv-nextflow-vep:v3'
 
