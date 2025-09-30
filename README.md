@@ -30,7 +30,7 @@
 
 ## Introduction
 
-**nf-core/rarevariantburden** is a bioinformatics pipeline that performs consistent summary count based rare variant burden test, which is useful when we only have sequenced cases/patients data, no matched control data, here we provided pre-processed and annotated public summary count data, such as gnomAD data, which can be used for rare variant burden test and can be used to identify disease-predisposition genes present in the case study.
+**nf-core/rarevariantburden (CoCoRV-nf)** is a bioinformatics pipeline that performs consistent summary count based rare variant burden test, which is useful when we only have sequenced cases/patients data, no matched control data, here we provided pre-processed and annotated public summary count data, such as gnomAD data, which can be used for rare variant burden test and can be used to identify disease-predisposition genes present in the case study.
 
 Some key features of our pipeline:
 
@@ -146,7 +146,7 @@ For more details about the output files and reports, please refer to the
 
 ## Credits
 
-nf-core/rarevariantburden is written by Saima Sultana Tithi (saimasultana.tithi@stjude.org), St. Jude Children's Research Hospital, Memphis, TN and Wenan Chen (chen.wenan@mayo.edu), Mayo Clinic, Rochester, MN.
+nf-core/rarevariantburden (CoCoRV-nf) is written by Saima Sultana Tithi (saimasultana.tithi@stjude.org), St. Jude Children's Research Hospital, Memphis, TN and Wenan Chen (chen.wenan@mayo.edu), Mayo Clinic, Rochester, MN.
 
 <!-- nf-core:
 We thank the following people for their extensive assistance in the development of this pipeline:

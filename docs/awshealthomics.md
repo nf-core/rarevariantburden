@@ -1,21 +1,23 @@
-# nf-core/rarevariantburden: AWSHealthOmics Implementation
+# nf-core/rarevariantburden (CoCoRV-nf): AWSHealthOmics Implementation
 
 ## Introduction
 
-This documentation will giude you how to implement **nf-core/rarevariantburden** pipeline on AWS HealthOmics cloud platform.
+This documentation will giude you how to implement **nf-core/rarevariantburden (CoCoRV-nf)** pipeline on AWS HealthOmics cloud platform.
 
 ## Prerequisites
 
-1. AWS CLI v2 installed and configured
-2. Appropriate IAM permissions for ECR and HealthOmics
+1. Have a Amazon AWS account
+2. AWS CLI v2 installed and configured
+3. Appropriate IAM permissions for ECR and HealthOmics
+4. Have a Docker Hub account
 
 ## Regions
 
 You should configure your ECR registry and HealthOmics workflows in the same region. If you will use multiple regions then repeat these steps in each region.
 
-## Step 1: Create Secrets Manager Secrets (For Authenticated Registries)
+## Step 1: Create Secrets in Secrets Manager (For Authenticated Docker Hub Registries)
 
-Some registries such as Docker Hub or private registries will require authentication. To use pull through cache, you must create a secret in Secrets Manager that contains the credentials for the registry. In these examples the region us-east-1 is specified. You should change this as needed.
+Some registries such as Docker Hub or private registries will require authentication. To use pull through cache, you must create a secret in Secrets Manager that contains the credentials for the Docker Hub registry. In these examples the region us-east-1 is specified. You should change this as needed.
 
 To obtain a Docker Hub token refer to https://docs.docker.com/security/access-tokens/
 
@@ -48,7 +50,7 @@ aws ecr create-pull-through-cache-rule \
 
 Create a registry permissions policy to allow HealthOmics to use pull through cache:
 
-Create a file registry-policy.json and copy the following text in there (replace the 'YOUR-ACCOUNT-ID' text with you account id, if you want to give permission to any im-user then replace "YOUR-IM-USER" text with your im user id, if there is no im-user you can delete the im-user line):
+Create a file `registry-policy.json` and copy the following text in there (replace the 'YOUR-ACCOUNT-ID' text with you account id, if you want to give permission to any im-user then replace "YOUR-IM-USER" text with your im user id, if there is no im-user you can delete the im-user line):
 
 ```bash
 {
@@ -119,7 +121,7 @@ aws ecr create-repository-creation-template \
 
 The HealthOmics service role used during workflow runs must have ECR permissions to pull container images from your pull through cache repositories.
 
-Create Trust Policy File, copy the following text in a trust-policy.json file:
+Create Trust Policy File, copy the following text in a `trust-policy.json` file:
 
 ```bash
 {
@@ -136,7 +138,7 @@ Create Trust Policy File, copy the following text in a trust-policy.json file:
 }
 ```
 
-Create Service Role Policy File, copy the following text in a service-role-policy.json file (replace 'YOUR-WORKFLOW-BUCKET' with a s3 bucket name under your account, you can use this bucket to create a folder for workflow input files, or to create a folder to save workflow output files):
+Create Service Role Policy File, copy the following text in a `service-role-policy.json` file (replace 'YOUR-WORKFLOW-BUCKET' with a s3 bucket name under your account, you can use this bucket to create a folder for workflow input files, or to create a folder to save workflow output files):
 
 ```bash
 {
@@ -216,7 +218,7 @@ aws iam attach-role-policy \
     --policy-arn arn:aws:iam::YOUR-ACCOUNT-ID:policy/HealthOmicsWorkflowPolicy
 ```
 
-## Step 6: Create nf-core/rarevariantburden workflow
+## Step 6: Create nf-core/rarevariantburden (CoCoRV-nf) workflow
 
 Pull the workflow code from github repository:
 
@@ -226,11 +228,11 @@ git clone https://github.com/nf-core/rarevariantburden.git
 
 Compress the 'rarevariantburden' folder to create the zip file (rarevariantburden.zip).
 
-Run the following command to create our workflow on AWS HealthOmics platform with name 'cocorv-nf-core_aws':
+Run the following command to create our workflow on AWS HealthOmics platform with name 'cocorv-nf':
 
 ```bash
 aws omics create-workflow \
-    --name cocorv-nf-core_aws \
+    --name cocorv-nf \
     --region us-east-1 \
     --definition-zip fileb://rarevariantburden.zip \
     --parameter-template file://rarevariantburden/aws.parameter.template.json \
@@ -254,18 +256,20 @@ The create-workflow request responds with the following:
 }
 ```
 
-Now you can login to your AWS HealthOmics console and on the left panel, click on the 'Private workflows' tab, you will see a new workflow called 'cocorv-nf-core_aws' is created there with status 'Active'.
+Now you can login to your AWS HealthOmics console and on the left panel, click on the 'Private workflows' tab, you will see a new workflow called 'cocorv-nf' is created there with status 'Active'.
 
-## Step 7: Run the nf-core/rarevariantburden workflow with our test files:
+## Step 7: Run the nf-core/rarevariantburden (CoCoRV-nf) workflow with our test files:
 
 Click on the newly created workflow, it will open a window similar to this:
+
 <picture align="center">
 <img alt="AWS HealthOmics workflow launch page" src="images/aws-healthomics-workflow-launch-page.png">
 </picture>
 
-Click on the 'Start run' button, type a run name for your test run, select a s3 bucket to save the run output, and in the Service role section, choose the HeathOmics role we have created before (HealthOmicsWorkflowRole), click 'Next' to go to the next page. In the 'Add parameters value' section you can upload the test jason file provided with the nf-core code base, aws-testrun-parameters.json. It will automatically fill all the necessary input parameters to run a test case. Click 'Next'. You can leave all the default settings in the 'Add run group, run cache and tags' section. Then go the final step 'Review and start run' and then start running the workflow.
+Click on the 'Start run' button, type a run name for your test run, select a s3 bucket to save the run output, and in the Service role section, choose the HeathOmics role we have created before (HealthOmicsWorkflowRole), click 'Next' to go to the next page. In the 'Add parameters value' section you can upload the test json file provided with the nf-core code base, `aws-testrun-parameters.json`. It will automatically fill all the necessary input parameters to run a test case. Click 'Next'. You can leave all the default settings in the 'Add run group, run cache and tags' section. Then go the final step 'Review and start run' and then start running the workflow.
 
-After the run finished, you will see a run status page like this, which contains all the run information, output folder link, run logs link.
+After the run finished, you will see a run status page like this, which contains all the run information, output folder link, all the run logs link.
+
 <picture align="center">
 <img alt="AWS HealthOmics workflow complete page" src="images/aws-workflow-complete-page.png">
 </picture>

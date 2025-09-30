@@ -12,15 +12,15 @@
         "optional": false
     },
     "controlDataFolder": {
-        "description": "Input files needed for the pipeline from the control dataset, for now we support 3 gnomAD datasets as control, gnomADv2exome, gnomADv4.1exome, gnomADv4.1genome. You need to download these datasets from our Amazon AWS s3 bucket: s3://cocorv-resource-files/",
+        "description": "Input files needed for the pipeline from the control dataset, for now we support 3 gnomAD datasets as control, gnomADv2exome, gnomADv4.1exome, gnomADv4.1genome. You need to pass AWS s3 bucket path, i.e., s3://cocorv-resource-files/gnomADv4.1exome as the parameter value",
         "optional": false
     },
     "annovarFolder": {
-        "description": "Resource folder for the annotation tool Annovar, you can download this folder from our Amazon AWS s3 bucket: s3://cocorv-resource-files/annovarFolder/",
+        "description": "Resource folder for the annotation tool Annovar, You just need to pass AWS s3 bucket path (s3://cocorv-resource-files/annovarFolder/) as the parameter value",
         "optional": false
     },
     "vepFolder": {
-        "description": "Resource folder for the annotation tool Annovar, you can download this folder from our Amazon AWS s3 bucket: s3://cocorv-resource-files/vepFolder/",
+        "description": "Resource folder for the annotation tool Annovar, You just need to pass AWS s3 bucket path (s3://cocorv-resource-files/vepFolder/) as the parameter value",
         "optional": false
     },
     "reference": {

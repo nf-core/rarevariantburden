@@ -1,5 +1,5 @@
 aws omics create-workflow \
-    --name cocorv-nf-core_aws \
+    --name cocorv-nf \
     --region us-east-1 \
     --definition-zip fileb://rarevariantburden.zip \
     --parameter-template file://rarevariantburden/aws.parameter.template.json \
