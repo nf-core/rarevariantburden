@@ -38,7 +38,7 @@ Some key features of our pipeline:
 - It can stratify cases into different ethnicity groups, and perform stratified analysis with group-matched control summary counts.
 - For recessive models, it can exclude double heterozygous due to high linkage disequilibrium in populations.
 - Also provides accurate inflation factor estimate, QQ plot, and powerful FDR control for discrete count data, whose p-value distribution under the null is far from the uniform distribution when the alleles are very rare.
-- Also can perform sex-stratified analysis if user provides the gender of the input samples
+- Also performs sex-stratified analysis if user provides the gender of the input samples
 - It supports gnomAD v2 exome (GRCh37) data, and gnomAD v4.1 exome (GRCh38) data, and gnomAD v4.1 genome (GRCh38) data as control.
 
 <!-- nf-core:
@@ -60,7 +60,7 @@ Some key features of our pipeline:
 
 1. Split the case joint called and VQSR applied VCF files chromosomewise (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
 2. Normalize and QC the splitted case VCF files (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
-3. Annotate normalized and QC'd VCF files with [Annovar](https://annovar.openbioinformatics.org/en/latest/) and [VEP](https://www.ensembl.org/vep) (VEP annotation is optional)
+3. Annotate normalized and QC'd VCF files with [Annovar](https://annovar.openbioinformatics.org/en/latest/) and [VEP](https://www.ensembl.org/vep) (default annotation tool is ANNOVAR)
 4. Convert the normalized and annotated VCF files to GDS format, which is easier to process in R (Using R seqarray)
 5. Predict the ethnicity of the case samples (Using gnomAD random forest classifier)
 6. Perform assiciation test for each VCF file using our [CoCoRV](https://bitbucket.org/Wenan/cocorv/) (Consistent summary Count based Rare Variant burden test) R package
@@ -146,7 +146,7 @@ For more details about the output files and reports, please refer to the
 
 ## Credits
 
-nf-core/rarevariantburden (CoCoRV-nf) is written by Saima Sultana Tithi (saimasultana.tithi@stjude.org), St. Jude Children's Research Hospital, Memphis, TN and Wenan Chen (chen.wenan@mayo.edu), Mayo Clinic, Rochester, MN.
+**nf-core/rarevariantburden (CoCoRV-nf)** is written by Saima Sultana Tithi (saimasultana.tithi@stjude.org), St. Jude Children's Research Hospital, Memphis, TN and Wenan Chen (chen.wenan@mayo.edu), Mayo Clinic, Rochester, MN.
 
 <!-- nf-core:
 We thank the following people for their extensive assistance in the development of this pipeline:
@@ -159,6 +159,8 @@ If you would like to contribute to this pipeline, please see the [contributing g
 For further information or help, don't hesitate to get in touch on the [Slack `#rarevariantburden` channel](https://nfcore.slack.com/channels/rarevariantburden) (you can join with [this invite](https://nf-co.re/join/slack)).
 
 ## Citations
+
+<!-- If you use nf-core/rarevariantburden for your analysis, please cite it using the following doi: [10.5281/zenodo.XXXXXX](https://doi.org/10.5281/zenodo.XXXXXX) -->
 
 To learn more about the original CoCoRV tool, please look at our paper published in _Nature Communications_ [Pubmed link](https://pubmed.ncbi.nlm.nih.gov/35545612/).
 
