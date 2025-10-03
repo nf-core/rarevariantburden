@@ -60,10 +60,10 @@ Some key features of our pipeline:
 
 1. Split the case joint called and VQSR applied VCF files chromosomewise (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
 2. Normalize and QC the splitted case VCF files (Using [BCFtools](https://samtools.github.io/bcftools/bcftools.html))
-3. Annotate normalized and QC'd VCF files with [Annovar](https://annovar.openbioinformatics.org/en/latest/) and [VEP](https://www.ensembl.org/vep) (default annotation tool is ANNOVAR)
+3. Annotate normalized and QCed VCF files with [Annovar](https://annovar.openbioinformatics.org/en/latest/) and [VEP](https://www.ensembl.org/vep) (default annotation tool is ANNOVAR)
 4. Convert the normalized and annotated VCF files to GDS format, which is easier to process in R (Using R seqarray)
 5. Predict the ethnicity of the case samples (Using gnomAD random forest classifier)
-6. Perform assiciation test for each VCF file using our [CoCoRV](https://bitbucket.org/Wenan/cocorv/) (Consistent summary Count based Rare Variant burden test) R package
+6. Perform association test for each VCF file using our [CoCoRV](https://bitbucket.org/Wenan/cocorv/) (Consistent summary Count based Rare Variant burden test) R package
 7. Merge association test results
 8. Calculate false positive rate (FDR) from merged results, plot QQ plot and lambda value using different R libraries
 9. For top K genes, generate the list of samples and associated variants along with the annotations for the variants, this list will help the users to further check the top genes and their variants
@@ -146,7 +146,7 @@ For more details about the output files and reports, please refer to the
 
 ## Credits
 
-**nf-core/rarevariantburden (CoCoRV-nf)** is written by Saima Sultana Tithi (saimasultana.tithi@stjude.org), St. Jude Children's Research Hospital, Memphis, TN and Wenan Chen (chen.wenan@mayo.edu), Mayo Clinic, Rochester, MN.
+**nf-core/rarevariantburden (CoCoRV-nf)** is written by Saima Sultana Tithi (saimasultana.tithi@stjude.org), St. Jude Children's Research Hospital, Memphis, TN, USA and Wenan Chen (chen.wenan@mayo.edu), Mayo Clinic, Rochester, MN, USA.
 
 <!-- nf-core:
 We thank the following people for their extensive assistance in the development of this pipeline:

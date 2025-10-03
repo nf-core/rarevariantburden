@@ -15,9 +15,9 @@ This documentation will guide you how to implement **nf-core/rarevariantburden (
 
 You should configure your ECR registry and HealthOmics workflows in the same region. If you will use multiple regions then repeat these steps in each region.
 
-## Step 1: Create Secrets in Secrets Manager (For Authenticated Docker Hub Registries)
+## Step 1: Create Secrets in Secrets Manager (To Authenticate Docker Hub Registries)
 
-Some registries such as Docker Hub or private registries will require authentication. To use pull through cache, you must create a secret in Secrets Manager that contains the credentials for the Docker Hub registry. In these examples the region us-east-1 is specified. You should change this as needed.
+Some registries such as Docker Hub or private registries will require authentication. As all our pipeline images are in Docker Hub registries, you must create a secret in Secrets Manager that contains the credentials for your Docker Hub registry. In these examples the region 'us-east-1' is specified. You should change this as needed.
 
 To obtain a Docker Hub token refer to https://docs.docker.com/security/access-tokens/
 

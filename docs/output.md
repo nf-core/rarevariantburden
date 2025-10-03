@@ -13,7 +13,7 @@ The directories listed below will be created in the results directory after the 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
 - [VCF-VQSR-normalizedQC](#vcf-vqsr-normalizedqc) - Normalization and QC
-- [Annotation](#annotation) - Annotate the normalized and QC'd VCF files with Annovar and VEP
+- [Annotation](#annotation) - Annotate the normalized and QCed VCF files with Annovar and VEP
 - [gnomADPosition](#gnomadposition) - Predict ethnicity of the case samples
 - [CoCoRV](#cocorv) - Run the burden test using case and control data and generate QQ plot and FDR results
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
@@ -24,7 +24,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 <summary>Output files</summary>
 
 - `vcf_vqsr_normalizedQC/`
-  - `*.biallelic.leftnorm.ABCheck.vcf.gz`: The normalized and QC'd VCF files (one file for each chromosome).
+  - `*.biallelic.leftnorm.ABCheck.vcf.gz`: The normalized and QCed VCF files (one file for each chromosome).
   - `*.biallelic.leftnorm.ABCheck.vcf.gz.tbi`: Index files for the normalized and QC'd VCF files.
   - `*.biallelic.leftnorm.ABCheck.vcf.gz.gds`: GDS format files for the normalized and QC'd VCF files.
 
