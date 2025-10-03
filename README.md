@@ -118,7 +118,7 @@ Now, you can run the pipeline using the following command:
 
 ```bash
 nextflow run nf-core/rarevariantburden \
-   -profile <docker/singularity/.../institute> \
+   -profile <docker/singularity/...>,<institute> \
    --caseJointVCF <jointVCF.vcf.gz> \
    --caseSample <sampleList.txt> \
    --controlDataFolder <controldataFolder> \
@@ -136,7 +136,7 @@ For more details and further functionality, please refer to the [usage documenta
 
 ## AWSHealthOmics Implementation
 
-For implementing our pipeline on AWS HealthOmics cloud platform, please refere to our AWS [documentation](awshealthomics.md).
+For implementing our pipeline on AWS HealthOmics cloud platform, please refere to our AWS [documentation](https://github.com/nf-core/rarevariantburden/blob/dev/awshealthomics.md).
 
 ## Pipeline output
 

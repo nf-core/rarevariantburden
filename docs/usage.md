@@ -17,11 +17,11 @@
 
 Before running the pipeline with your data, we recommend running it with the test dataset available [here](https://github.com/nf-core/test-datasets/tree/rarevariantburden). You do not need to download the data as the pipeline is configured to fetch that data automatically for you when you use the test profile.
 
-Run the following command, where YOURPROFILE is the package manager you installed on your machine. For example, `-profile test,docker` or `-profile test,singularity`:
+Run the following command, where YOURPROFILE is the package manager you installed on your machine. For example, `-profile test,docker` or `-profile test,singularity`. You also need a profile 'institute' which will be a profile to run nextflow on your institute's cluster environment :
 
 ```bash
 nextflow run nf-core/rarevariantburden \
-    -profile test,<YOURPROFILE> \
+    -profile test,<YOURPROFILE>,<institute> \
     --outdir <OUTDIR>
 ```
 
