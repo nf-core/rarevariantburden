@@ -23,6 +23,7 @@
 - [Pipeline summary](#pipeline-summary)
 - [Usage](#usage)
 - [AWSHealthOmics Implementation](#awshealthomics-implementation)
+- [DNAnexus Implementation](#dnanexus-implementation)
 - [Pipeline output](#pipeline-output)
 - [Credits](#credits)
 - [Contributions and Support](#contributions-and-support)
@@ -112,12 +113,12 @@ Here are the s3 bucket paths of the annotation tool datasets:
 - s3://cocorv-resource-files/annovarFolder/
 - s3://cocorv-resource-files/vepFolder/
 
-Now, you can run the pipeline using the following command:
+Now, you can run the pipeline by downloading the code base from github and using the following command:
 
 <!-- nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run nf-core/rarevariantburden \
+nextflow run rarevariantburden/main.nf \
    -profile <docker/singularity/...>,<institute> \
    --caseJointVCF <jointVCF.vcf.gz> \
    --caseSample <sampleList.txt> \
@@ -137,6 +138,10 @@ For more details and further functionality, please refer to the [usage documenta
 ## AWSHealthOmics Implementation
 
 For implementing our pipeline on AWS HealthOmics cloud platform, please refere to our AWS [documentation](https://github.com/nf-core/rarevariantburden/blob/dev/awshealthomics.md).
+
+## DNAnexus Implementation
+
+For implementing our pipeline on DNAnexus cloud platform, please refere to our DNAnexus [documentation](https://github.com/nf-core/rarevariantburden/blob/dev/dnanexus.md).
 
 ## Pipeline output
 

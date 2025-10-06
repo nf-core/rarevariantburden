@@ -7,8 +7,8 @@ lint: {}
 template:
   org: nf-core
   name: rarevariantburden
-  description: This pipeline include tools for performing consistent summary 
-    count based rare variant burden test, which is useful when we only have 
+  description: This pipeline include tools for performing consistent summary
+    count based rare variant burden test, which is useful when we only have
     sequenced cases data, no control data; here we can compare the cases against
     public summary count data, such as gnomAD data
   author: Saima Sultana Tithi
