@@ -179,8 +179,8 @@ workflow RAREVARIANTBURDEN {
         CoCoRV(caseChannel.join(controlChannel),
             intersectChannel,
             populationChannel,
-            params.controlDataFolder + "/stratified_config_gnomad.txt",
-            params.controlDataFolder + "/gnomAD.exclude.allow.segdup.lcr.v3.txt.gz",
+            params.ACANConfig,
+            params.variantExclude,
             params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds",
             params.caseSample)
     }
@@ -188,8 +188,8 @@ workflow RAREVARIANTBURDEN {
         CoCoRV(caseChannel.join(controlChannel),
             intersectChannel,
             populationChannel,
-            params.controlDataFolder + "/stratified_config_gnomadV4.asj.txt",
-            params.controlDataFolder + "/gnomAD41WGSExtraExcludeInCodingExcludeTAS2R46.txt.gz",
+            params.ACANConfig,
+            params.variantExclude,
             params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds",
             params.caseSample)
     }

@@ -7,6 +7,7 @@ This documentation will guide you how to implement **nf-core/rarevariantburden (
 ## Importing nf-core/rarevariantburden (CoCoRV-nf) pipeline
 
 ## Step 1: Import via the User Interface (UI):
+
 Go to a DNAnexus project. Click Add and in the drop down menu select 'Import Pipeline/Workflow'.
 
 Next enter the required information (see below) and click 'Start Import':
@@ -20,3 +21,4 @@ You will see that a Nextflow Pipeline Importer job will start running and after 
 <picture align="center">
 <img alt="DNAnexus applet" src="docs/images/dnanexus-applet.png">
 </picture>
+

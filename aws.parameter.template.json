@@ -20,8 +20,8 @@
         "optional": false
     },
     "vepFolder": {
-        "description": "Resource folder for the annotation tool Annovar, You just need to pass AWS s3 bucket path (s3://cocorv-resource-files/vepFolder/) as the parameter value",
-        "optional": false
+        "description": "Resource folder for the annotation tool Annovar, You just need to pass AWS s3 bucket path (s3://cocorv-resource-files/vepFolder/) as the parameter value, default: 'NA'",
+        "optional": true
     },
     "reference": {
         "description": "Reference genome build version, allowed values are 'GRCh37', 'GRCh38'. Default value: 'GRCh38'",
@@ -97,6 +97,14 @@
     },
     "covariate": {
         "description": "a file with header, 1st column is ID, and must have a column named 'Sex'. The sex is coded either as Male/Female, 1/2, or XY/XX, NA means missing",
+        "optional": true
+    },
+    "ACANConfig": {
+        "description": "the configuration file specifying the ancestry groups for analysis",
+        "optional": true
+    },
+    "variantExclude": {
+        "description": "A one column file specifying the variants to be excluded",
         "optional": true
     }
 }
