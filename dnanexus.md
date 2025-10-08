@@ -23,10 +23,11 @@ You will see that a Nextflow Pipeline Importer job will start running and after 
 </picture>
 
 ## Step 2: Test run the pipeline from the UI:
+
 We will run the test profile for 'rarevariantburden' which should take ~30 mins to run. The test profile inputs are the nextflow outdir and -profile test,docker [test profile](https://github.com/nf-core/rarevariantburden/blob/dev/conf/test.config)
 
 - Click on the 'CoCoRV-nf' applet that you created
-- Type in a 'Job Name' for example 'rarevariantburden-test' and click on 'Output to' then make a folder or choose an existing folder. 
+- Type in a 'Job Name' for example 'rarevariantburden-test' and click on 'Output to' then make a folder or choose an existing folder.
 
 <picture align="center">
 <img alt="DNAnexus run applet" src="docs/images/dnanexus-run-applet.png">
@@ -50,7 +51,7 @@ We will run the test profile for 'rarevariantburden' which should take ~30 mins 
 
 ## Step 3: Run the pipeline for real datasets
 
-We prepared a test dataset using 25 samples from 1000 Genomes project. You can download this dataset from AWS s3 bucket: "https://cocorv-1kg-grch37-data.s3.amazonaws.com/". 
+We prepared a test dataset using 25 samples from 1000 Genomes project. You can download this dataset from AWS s3 bucket: "https://cocorv-1kg-grch37-data.s3.amazonaws.com/".
 
 For control data, you need to download the control data from our Amazon AWS s3 bucket. We provide 3 different control datasets, For build GRCh37, we have gnomADv2exome data, for build GRCh38, we have gnomADv4.1exome and gnomADv4.1genome data as controls.
 
@@ -68,4 +69,3 @@ Here are the s3 bucket paths of the annotation tool datasets:
 - s3://cocorv-resource-files/vepFolder/
 
 ## Step 4: Download data from AWS s3 bucket:
-
