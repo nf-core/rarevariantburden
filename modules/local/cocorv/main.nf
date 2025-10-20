@@ -3,9 +3,8 @@ process splitJointVCF {
     label 'process_single'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     path caseJointVCF
@@ -31,9 +30,8 @@ process coverageIntersect {
     publishDir "${params.outdir}", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     path caseBed
@@ -55,9 +53,8 @@ process normalizeQC {
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     tuple val(chr), path(vcfFile)
@@ -83,9 +80,8 @@ process skipNormalization {
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     tuple val(chr), path(normalized), path(normalizedTbi)
@@ -106,9 +102,8 @@ process annotate_annovar {
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-vep:v3' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-vep:v3'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 5
@@ -144,9 +139,8 @@ process annotate_vep {
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-vep:v3' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-vep:v3'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 5
@@ -219,9 +213,8 @@ process skipAnnotation {
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     tuple val(chr), path(annotated), path(annotatedTbi)
@@ -242,9 +235,8 @@ process caseGenotypeGDS {
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
     conda "${moduleDir}/environment-r.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-r:v5' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-r:v5'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 2
@@ -270,9 +262,8 @@ process caseAnnotationGDS {
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
     conda "${moduleDir}/environment-r.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-r:v5' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-r:v5'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
@@ -298,9 +289,8 @@ process extractGnomADPositions {
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     val(chr)
@@ -324,9 +314,8 @@ process mergeExtractedPositions {
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     path extractedVCFFile
@@ -346,9 +335,8 @@ process RFPrediction {
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     input:
     path VCFForPrediction
@@ -377,9 +365,8 @@ process addSexToGroup {
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
     conda "${moduleDir}/environment-r.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-r:v5' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-r:v5'
 
     input:
     path casePopulation
@@ -400,9 +387,8 @@ process CoCoRV {
     publishDir "${params.outdir}/CoCoRV/byChr", mode: 'copy'
 
     conda "${moduleDir}/environment-r.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-r:v5' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-r:v5'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
@@ -509,9 +495,8 @@ process mergeCoCoRVResults {
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
     conda "${moduleDir}/environment-r.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-r:v5' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-r:v5'
 
     input:
     path associationResult
@@ -552,9 +537,8 @@ process QQPlotAndFDR {
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
     conda "${moduleDir}/environment-r.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-r:v5' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-r:v5'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
@@ -583,9 +567,8 @@ process postCheck {
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
-    container "${ workflow.containerEngine == 'singularity' && !task.ext.singularity_pull_docker_container ?
-        'stithi/cocorv-nextflow-python:v7' :
-        'biocontainers/bcftools:1.14--h88f3f91_0' }"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1

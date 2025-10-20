@@ -116,21 +116,24 @@ Scroll down and in 'Nextflow Options', 'Nextflow Run Options' type `-profile doc
 Here is a summary of the input options needed:
 
 'Inputs' section:
+
 - caseSample: dx://project-XXX:/cocorv-1kg-grch37-data/samples.txt
 - caseJointVCF: NA
 - caseBed: dx://project-XXX:/cocorv-1kg-grch37-data/samples.1KG.coverage10x.bed.gz
 - caseVCFFileList: dx://project-XXX:/cocorv-1kg-grch37-data/test-1KG-GRCh37-files.csv
 
 'Commons' section:
+
 - vepFolder: NA
 - annovarFolder: dx://project-XXX:/annovarFolder
-- controlDataFolder: dx://project-XXX:/gnomADv4.1exome
+- controlDataFolder: dx://project-XXX:/gnomADv2exome
 - outdir: ./results
 - reference: GRCh37
 - gnomADVersion: v2exome
 - AFMax: 0.0001
 
 'Nextflow Options' section
+
 - Nextflow Run Options: -profile docker -queue-size 50
 
 Then click 'Start Analysis' and click 'Launch Analysis'.
