@@ -1,0 +1,15 @@
+name: cocorv-env-gnomadv4
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - openjdk=8
+  - cmake
+  - python=3.10.2
+  - pip
+  - psycopg2
+  - onnx
+  - onnxruntime
+  - bedtools
+  - bcftools=1.14
+  - tabix
