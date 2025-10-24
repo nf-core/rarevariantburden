@@ -12,10 +12,8 @@ include {
     splitJointVCF;
     coverageIntersect;
     normalizeQC;
-    skipNormalization;
     annotate_annovar;
     annotate_vep;
-    skipAnnotation;
     caseGenotypeGDS;
     caseAnnotationGDS;
     extractGnomADPositions;
@@ -25,7 +23,8 @@ include {
     CoCoRV;
     mergeCoCoRVResults;
     QQPlotAndFDR;
-    postCheck
+    postCheckPerChr;
+    mergePostCheck
 } from '../modules/local/cocorv'
 
 /*
@@ -74,13 +73,10 @@ workflow RAREVARIANTBURDEN {
         }
         else {
             //already have normalized vcf files
-            normalize_ch = Channel
+            normalizeQCChannel = Channel
                                 .fromPath(params.caseNormalizedVCFFileList)
                                 .splitCsv(header: true)
                                 .map { row -> tuple(row.chr, file(row.vcf), file(row.index)) } // Create a tuple of chr, normalized VCF file path, index file path
-
-            skipNormalization(normalize_ch)
-            normalizeQCChannel = skipNormalization.out
         }
     }
 
@@ -104,13 +100,10 @@ workflow RAREVARIANTBURDEN {
         }
     } else {
         //already have annotated vcf files
-        annotate_ch = Channel
+        annotateChannel = Channel
                                 .fromPath(params.caseAnnotatedVCFFileList)
                                 .splitCsv(header: true)
                                 .map { row -> tuple(row.chr, file(row.vcf), file(row.index)) } // Create a tuple of chr, annotated VCF file path, index file path
-
-        skipAnnotation(annotate_ch)
-        annotateChannel = skipAnnotation.out
     }
 
     if (params.caseGenotypeGDSFileList == "NA" && params.caseAnnotationGDSFileList == "NA") {
@@ -176,7 +169,7 @@ workflow RAREVARIANTBURDEN {
     caseChannel = caseGenotypeGDSChannel.join(caseAnnotationGDSChannel)
 
     if (params.reference == "GRCh37") {
-        CoCoRV(caseChannel.join(controlChannel),
+        cocorvOutChannel = CoCoRV(caseChannel.join(controlChannel),
             intersectChannel,
             populationChannel,
             params.ACANConfig,
@@ -185,7 +178,7 @@ workflow RAREVARIANTBURDEN {
             params.caseSample)
     }
     else if (params.reference == "GRCh38") {
-        CoCoRV(caseChannel.join(controlChannel),
+        cocorvOutChannel = CoCoRV(caseChannel.join(controlChannel),
             intersectChannel,
             populationChannel,
             params.ACANConfig,
@@ -195,18 +188,17 @@ workflow RAREVARIANTBURDEN {
     }
 
     // merge CoCoRV results
-    mergeCoCoRVResults(CoCoRV.out.association_perChr.collect(), CoCoRV.out.caseVariants_perChr.collect(),
-        CoCoRV.out.controlVariants_perChr.collect())
+    mergeCoCoRVResults(cocorvOutChannel.map{it[1]}.collect(), cocorvOutChannel.map{it[2]}.collect(),
+        cocorvOutChannel.map{it[3]}.collect())
 
     // QQ plot and FDR
     QQPlotAndFDR(mergeCoCoRVResults.out.association_res, mergeCoCoRVResults.out.caseVariants_res, mergeCoCoRVResults.out.controlVariants_res)
 
-    postCheck(mergeCoCoRVResults.out.association_res, params.topK, params.caseControl, params.reference, params.caseSample,
-        normalizeQCChannel.normalizedQCedVCFFile.collect(),
-        normalizeQCChannel.normalizedQCedVCFFileIndex.collect(),
-        annotateChannel.annotatedFile.collect(),
-        annotateChannel.annotatedFileIndex.collect(),
-        CoCoRV.out.caseVariants_perChr.collect(), CoCoRV.out.controlVariants_perChr.collect())
+    normalizeQCAnnotateChannel = normalizeQCChannel.join(annotateChannel)
+    postCheckInputChannel = normalizeQCAnnotateChannel.join(cocorvOutChannel)
+
+    postCheckPerChr(postCheckInputChannel, params.topK, params.caseControl, params.reference, params.caseSample)
+    mergePostCheck(postCheckPerChr.out.collect(), params.topK, params.caseControl)
 
     emit:association_res = mergeCoCoRVResults.out.association_res // channel: /path/to/association.tsv
     qqplot               = QQPlotAndFDR.out.qqplot                // channel: /path/to/association.tsv.dominant.nRep1000.pdf

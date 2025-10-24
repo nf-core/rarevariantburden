@@ -63,9 +63,7 @@ process normalizeQC {
     path refFASTAGzi
 
     output:
-    val("${chr}"), emit: chr
-    path("${chr}.biallelic.leftnorm.ABCheck.vcf.gz"), emit: normalizedQCedVCFFile
-    path("${chr}.biallelic.leftnorm.ABCheck.vcf.gz.tbi"), emit: normalizedQCedVCFFileIndex
+    tuple val("${chr}"), path("${chr}.biallelic.leftnorm.ABCheck.vcf.gz"), path("${chr}.biallelic.leftnorm.ABCheck.vcf.gz.tbi")
 
     script:
     """
@@ -109,16 +107,12 @@ process annotate_annovar {
     maxRetries 5
 
     input:
-    val(chr)
-    path(normalizedQCedVCFFile)
-    path(indexFile)
+    tuple val(chr), path(normalizedQCedVCFFile), path(indexFile)
     val reference
     path annovarFolder
 
     output:
-    val("${chr}"), emit: chr
-    path("${chr}.annotated.vcf.gz"), emit: annotatedFile
-    path("${chr}.annotated.vcf.gz.tbi"), emit: annotatedFileIndex
+    tuple val("${chr}"), path("${chr}.annotated.vcf.gz"), path("${chr}.annotated.vcf.gz.tbi")
 
     script:
     if (reference == "GRCh37") {
@@ -156,9 +150,7 @@ process annotate_vep {
     path refFASTA
 
     output:
-    val("${chr}"), emit: chr
-    path("${chr}.annotated.vcf.gz"), emit: annotatedFile
-    path("${chr}.annotated.vcf.gz.tbi"), emit: annotatedFileIndex
+    tuple val("${chr}"), path("${chr}.annotated.vcf.gz"), path("${chr}.annotated.vcf.gz.tbi")
 
     script:
     refbuild = null
@@ -242,9 +234,7 @@ process caseGenotypeGDS {
     maxRetries 2
 
     input:
-    val(chr)
-    path(normalizedQCedVCFFile)
-    path(indexFile)
+    tuple val(chr), path(normalizedQCedVCFFile), path(indexFile)
 
     output:
     tuple val("${chr}"),
@@ -269,9 +259,7 @@ process caseAnnotationGDS {
     maxRetries 1
 
     input:
-    val(chr)
-    path(annotatedFile)
-    path(indexFile)
+    tuple val(chr), path(annotatedFile), path(indexFile)
 
     output:
     tuple val("${chr}"),
@@ -293,9 +281,7 @@ process extractGnomADPositions {
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
-    val(chr)
-    path(normalizedQCedVCFFile)
-    path(indexFile)
+    tuple val(chr), path(normalizedQCedVCFFile), path(indexFile)
     path(gnomADPCPosition)
 
     output:
@@ -403,9 +389,7 @@ process CoCoRV {
     path caseSample
 
     output:
-    path("${chr}.association.tsv"), emit: association_perChr
-    path("${chr}.case.group"), emit: caseVariants_perChr
-    path("${chr}.control.group"), emit: controlVariants_perChr
+    tuple val(chr), path("${chr}.association.tsv"), path("${chr}.case.group"), path("${chr}.control.group")
 
     script:
     chrOnly = chr
@@ -593,4 +577,67 @@ process postCheck {
     """
     bash ${params.CoCoRVFolder}/utilities/checkFPGenes.sh ${params.CoCoRVFolder} ${associationResult} ${topK} ${caseControl} ${params.reference} ${caseSample} ${params.annotationTool}
     """
+}
+
+process postCheckPerChr {
+    label 'process_high_memory'
+
+    conda "${moduleDir}/environment.yml"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
+
+    errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
+    maxRetries 1
+
+    input:
+    tuple val(chr), path(normalizedQCedVCFFile), path(normalizedindexFile), path(annotatedFile), path(annotateindexFile), path(associationResult), path(caseVariant), path(controlVariant)
+    val topK
+    val caseControl
+    val reference
+    path caseSample
+
+    output:
+    path "${chr}.*.variants.tsv"
+
+    script:
+    """
+    bash checkFPGenes.sh ${params.CoCoRVFolder} ${associationResult} ${topK} ${caseControl} ${params.reference} ${caseSample} ${params.annotationTool} ${chr}
+    """
+}
+
+process mergePostCheck {
+    label 'process_high_memory'
+    publishDir "${params.outdir}/CoCoRV", mode: 'copy'
+
+    conda "${moduleDir}/environment.yml"
+    ext.singularity_pull_docker_container = true
+    container 'stithi/cocorv-nextflow-python:v7'
+
+    errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
+    maxRetries 1
+
+    input:
+    path postCheckResults
+    val topK
+    val caseControl
+
+    output:
+    path "top${topK}.association.tsv.${caseControl}.variants.tsv"
+
+    script:
+    """
+
+    i=0
+    for file in ${postCheckResults}; do
+        echo \${file}
+        if [[ \${i} == 0 ]]; then
+            cat \${file} > "postCheck.tsv.tmp"
+        i=1
+        else
+            tail -n+2 \${file} >> "postCheck.tsv.tmp"
+        fi
+    done
+    cat "postCheck.tsv.tmp" > "top${topK}.association.tsv.${caseControl}.variants.tsv"
+    """
+
 }
