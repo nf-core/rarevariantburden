@@ -580,7 +580,8 @@ process postCheck {
 }
 
 process postCheckPerChr {
-    label 'process_high_memory'
+    tag "${chr}"
+    label 'process_low'
 
     conda "${moduleDir}/environment.yml"
     ext.singularity_pull_docker_container = true
@@ -606,7 +607,7 @@ process postCheckPerChr {
 }
 
 process mergePostCheck {
-    label 'process_high_memory'
+    label 'process_low'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
     conda "${moduleDir}/environment.yml"
