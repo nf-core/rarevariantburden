@@ -140,9 +140,7 @@ process annotate_vep {
     maxRetries 5
 
     input:
-    val(chr)
-    path(normalizedQCedVCFFile)
-    path(indexFile)
+    tuple val(chr), path(normalizedQCedVCFFile), path(indexFile)
     val reference
     path annovarFolder
     path vepCacheFolder

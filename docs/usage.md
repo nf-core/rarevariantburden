@@ -20,7 +20,7 @@ Before running the pipeline with your data, we recommend running it with the tes
 Run the following command, where YOURPROFILE is the package manager you installed on your machine. For example, `-profile test,docker` or `-profile test,singularity`. You also need a profile 'institute' which will be a profile to run nextflow on your institute's cluster environment :
 
 ```bash
-nextflow run nf-core/rarevariantburden \
+nextflow run rarevariantburden/main.nf \
     -profile test,<YOURPROFILE>,<institute> \
     --outdir <OUTDIR>
 ```
@@ -78,7 +78,7 @@ Now, you can run the pipeline using the following command:
 <!-- nf-core: update the following command to include all required parameters for a minimal example -->
 
 ```bash
-nextflow run nf-core/rarevariantburden \
+nextflow run rarevariantburden/main.nf \
    -profile <docker/singularity/.../institute> \
    --caseJointVCF <jointVCF.vcf.gz> \
    --caseSample <sampleList.txt> \
