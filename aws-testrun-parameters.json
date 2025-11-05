@@ -1,7 +1,7 @@
 {
     "reference": "GRCh37",
     "topK": 20,
-    "vepFolder": "s3://cocorv-resource-files/vepFolder/",
+    "vepFolder": "NA",
     "caseSample": "s3://cocorv-1kg-grch37-data/cocorv-1kg-grch37-data/samples.txt",
     "gnomADVersion": "v2exome",
     "annovarFolder": "s3://cocorv-resource-files/annovarFolder/",
