@@ -101,11 +101,6 @@ workflow {
     )
 }
 
-workflow.onComplete {
-    println "[Nextflow] Saving reports to S3: ${params.outdir}/pipeline_info"
-    publishDir "${params.outdir}/pipeline_info", mode: 'copy'
-}
-
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     THE END
