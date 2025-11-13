@@ -1,12 +1,14 @@
 {
     "reference": "GRCh37",
     "topK": 20,
-    "vepFolder": "NA",
+    "variantExclude": "s3://cocorv-resource-files/gnomADv2exome/gnomAD.exclude.allow.segdup.lcr.v3.txt.gz",
+    "ACANConfig": "s3://cocorv-resource-files/gnomADv2exome/stratified_config_gnomad.txt",
     "caseSample": "s3://cocorv-1kg-grch37-data/cocorv-1kg-grch37-data/samples.txt",
     "gnomADVersion": "v2exome",
+    "AFMax": 0.0001,
+    "chrSet": "21 22",
     "annovarFolder": "s3://cocorv-resource-files/annovarFolder/",
-    "caseVCFFileList": "s3://cocorv-1kg-grch37-data/cocorv-1kg-grch37-data/test-1KG-vcf-files.csv",
-    "caseJointVCF": "NA",
+    "caseVCFFileList": "s3://cocorv-1kg-grch37-data/cocorv-1kg-grch37-data/test-1KG-vcf-files_chr21-22.csv",
     "controlDataFolder": "s3://cocorv-resource-files/gnomADv2exome/",
     "outdir": "/mnt/workflow/"
 }

@@ -101,6 +101,75 @@ workflow {
     )
 }
 
+workflow.onComplete {
+    def is_healthomics = params.outdir?.startsWith('/mnt/workflow') ?: false
+
+    if (is_healthomics) {
+        // The report files are written relative to where Nextflow was launched
+        def sourceDir = file("${params.outdir}/pipeline_info")
+
+        def omics_workflow_id = System.getenv('OMICS_WORKFLOW_ID')
+        def omics_output_uri = System.getenv('OMICS_RUN_OUTPUT_URI')
+        def omics_run_id = System.getenv('OMICS_RUN_ID')
+
+        log.info "Running on AWS HealthOmics"
+        log.info "Workflow ID: ${omics_workflow_id}"
+        log.info "Run ID: ${omics_run_id}"
+        log.info "Output URI: ${omics_output_uri}"
+        log.info "Launch directory: ${workflow.launchDir}"
+
+        log.info """
+        === Workflow Configuration ===
+        Params outdir: ${params.outdir}
+        Workflow launchDir: ${workflow.launchDir}
+        Workflow workDir: ${workflow.workDir}
+        Workflow projectDir: ${workflow.projectDir}
+        Workflow outputDir: ${workflow.outputDir}
+        Workflow runName: ${workflow.runName}
+        Workflow sessionId: ${workflow.sessionId}
+        ===========================
+        """.stripIndent()
+
+        def metadataFile = file('/mnt/workflow/run-metadata.json')
+
+        if (metadataFile.exists()) {
+            def metadata = new groovy.json.JsonSlurper().parseText(metadataFile.text)
+            def runOutputUri = metadata.outputUri ?: metadata.runOutputUri
+
+            log.info "Run Output URI from metadata: ${runOutputUri}"
+
+            // Use this URI for copying pipeline_info
+            def destDir = file("${runOutputUri}/pipeline_info")
+            // ... rest of your copy logic
+
+            if (sourceDir.exists()) {
+                // Copy entire directory
+                sourceDir.copyTo(destDir)
+                log.info "✓ Pipeline info copied to ${destDir}"
+            } else {
+                // Files might be directly in launchDir
+                def destDirFile = file(destDir)
+                destDirFile.mkdirs()
+
+                def patterns = ["execution_timeline*.html", "execution_report*.html",
+                            "execution_trace*.txt", "pipeline_dag*.html"]
+
+                patterns.each { pattern ->
+                    file("${workflow.launchDir}").listFiles().findAll {
+                        it.name.matches(pattern.replace('*', '.*'))
+                    }.each {
+                        it.copyTo("${destDir}/${it.name}")
+                        log.info "✓ Copied ${it.name} to ${destDir}"
+                    }
+                }
+            }
+        } else {
+            log.warn "Run metadata file not found"
+        }
+
+    }
+}
+
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     THE END
