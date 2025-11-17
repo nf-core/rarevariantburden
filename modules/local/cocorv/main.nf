@@ -226,7 +226,7 @@ process caseGenotypeGDS {
 
     conda "${moduleDir}/environment-r.yml"
     ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v5'
+    container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 2
@@ -251,7 +251,7 @@ process caseAnnotationGDS {
 
     conda "${moduleDir}/environment-r.yml"
     ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v5'
+    container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
@@ -350,7 +350,7 @@ process addSexToGroup {
 
     conda "${moduleDir}/environment-r.yml"
     ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v5'
+    container 'stithi/cocorv-nextflow-r:v6'
 
     input:
     path casePopulation
@@ -372,7 +372,7 @@ process CoCoRV {
 
     conda "${moduleDir}/environment-r.yml"
     ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v5'
+    container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
@@ -478,7 +478,7 @@ process mergeCoCoRVResults {
 
     conda "${moduleDir}/environment-r.yml"
     ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v5'
+    container 'stithi/cocorv-nextflow-r:v6'
 
     input:
     path associationResult
@@ -520,7 +520,7 @@ process QQPlotAndFDR {
 
     conda "${moduleDir}/environment-r.yml"
     ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v5'
+    container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
