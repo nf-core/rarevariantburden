@@ -2,8 +2,6 @@ process splitJointVCF {
     tag "${caseJointVCF}_${chr}"
     label 'process_single'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -29,8 +27,6 @@ process coverageIntersect {
     label 'process_single'
     publishDir "${params.outdir}", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -52,8 +48,6 @@ process normalizeQC {
     label 'process_single'
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -77,8 +71,6 @@ process skipNormalization {
     label 'process_single'
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -99,8 +91,6 @@ process annotate_annovar {
     label 'process_medium'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-vep:v3'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -132,8 +122,6 @@ process annotate_vep {
     label 'process_high'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-vep:v3'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -202,8 +190,6 @@ process skipAnnotation {
     label 'process_single'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -224,8 +210,6 @@ process caseGenotypeGDS {
     label 'process_medium'
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
-    conda "${moduleDir}/environment-r.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -249,8 +233,6 @@ process caseAnnotationGDS {
     label 'process_medium'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
-    conda "${moduleDir}/environment-r.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -274,8 +256,6 @@ process extractGnomADPositions {
     label 'process_single'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -297,8 +277,6 @@ process mergeExtractedPositions {
     label 'process_single'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -318,8 +296,6 @@ process RFPrediction {
     label 'process_low'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -348,8 +324,6 @@ process addSexToGroup {
     label 'process_single'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
-    conda "${moduleDir}/environment-r.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-r:v6'
 
     input:
@@ -370,9 +344,7 @@ process CoCoRV {
     label 'process_high_memory'
     publishDir "${params.outdir}/CoCoRV/byChr", mode: 'copy'
 
-    conda "${moduleDir}/environment-r.yml"
-    ext.singularity_pull_docker_container = true
-    container 'stithi/cocorv-nextflow-r:v6'
+    container 'stithi/cocorv-nextflow-r:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
     maxRetries 1
@@ -476,8 +448,6 @@ process mergeCoCoRVResults {
     label 'process_medium'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
-    conda "${moduleDir}/environment-r.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-r:v6'
 
     input:
@@ -518,8 +488,6 @@ process QQPlotAndFDR {
     label 'process_medium'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
-    conda "${moduleDir}/environment-r.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -548,8 +516,6 @@ process postCheck {
     label 'process_high_memory'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -581,8 +547,6 @@ process postCheckPerChr {
     tag "${chr}"
     label 'process_low'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -608,8 +572,6 @@ process mergePostCheck {
     label 'process_low'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
-    conda "${moduleDir}/environment.yml"
-    ext.singularity_pull_docker_container = true
     container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
