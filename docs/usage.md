@@ -83,7 +83,7 @@ nextflow run rarevariantburden/main.nf \
    --caseJointVCF <jointVCF.vcf.gz> \
    --caseSample <sampleList.txt> \
    --controlDataFolder <controldataFolder> \
-   --annovarFoler <annovarFolder> \
+   --annovarFolder <annovarFolder> \
    --vepFolder <vepFolder> \
    --reference <GRCh37/GRCh38> \
    --gnomADVersion <v2exome/v4exome/v4genome> \
