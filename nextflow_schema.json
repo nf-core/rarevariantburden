@@ -10,23 +10,13 @@
             "type": "object",
             "fa_icon": "fas fa-terminal",
             "description": "Define where the pipeline should find input data and save output data.",
-            "required": ["input", "outdir"],
+            "required": ["outdir"],
             "properties": {
-                "input": {
-                    "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "schema": "assets/schema_input.json",
-                    "mimetype": "text/csv",
-                    "pattern": "^\\S+\\.csv$",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/rarevariantburden/usage#samplesheet-input).",
-                    "fa_icon": "fas fa-file-csv"
-                },
                 "outdir": {
                     "type": "string",
                     "format": "directory-path",
                     "description": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
+                    "help_text": "The output directory where the results will be saved. You have to use absolute paths to storage on Cloud infrastructure.",
                     "fa_icon": "fas fa-folder-open"
                 },
                 "email": {
@@ -35,50 +25,358 @@
                     "fa_icon": "fas fa-envelope",
                     "help_text": "Set this parameter to your e-mail address to get a summary e-mail with details of the run sent to you when the workflow exits. If set in your user config file (`~/.nextflow/config`) then you don't need to specify this on the command line for every run.",
                     "pattern": "^([a-zA-Z0-9_\\-\\.]+)@([a-zA-Z0-9_\\-\\.]+)\\.([a-zA-Z]{2,5})$"
-                },
-                "multiqc_title": {
-                    "type": "string",
-                    "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
-                    "fa_icon": "fas fa-file-signature"
                 }
             }
         },
-        "reference_genome_options": {
-            "title": "Reference genome options",
+        "pipeline_options": {
+            "title": "Pipeline options",
             "type": "object",
-            "fa_icon": "fas fa-dna",
-            "description": "Reference genome related files and options required for the workflow.",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define different pipeline parameters.",
+            "required": ["caseJointVCF", "caseSample", "controlDataFolder"],
             "properties": {
-                "genome": {
+                "caseJointVCF": {
                     "type": "string",
-                    "description": "Name of iGenomes reference.",
-                    "fa_icon": "fas fa-book",
-                    "help_text": "If using a reference genome configured in the pipeline using iGenomes, use this parameter to give the ID for the reference. This is then used to build the full paths for all required reference genome files e.g. `--genome GRCh38`. \n\nSee the [nf-core website docs](https://nf-co.re/usage/reference_genomes) for more details."
+                    "default": "NA",
+                    "description": "Joined called and VQSR applied vcf file from the case cohort. If you already have splitted joined called VCF file by chromosome, you need to put 'NA' in here and provide the splitted VCF file list in the 'caseVCFFileList' parameter. Your caseJointVCF will be splitted into chr 1-22 by default, if you want something else, you need to specify that in 'chrSet' parameter.",
+                    "help_text": "Joined called and VQSR applied vcf file from the case cohort. If you already have splitted joined called VCF file by chromosome, you need to put 'NA' in here and provide the splitted VCF file list in the 'caseVCFFileList' parameter. Your caseJointVCF will be splitted into chr 1-22 by default, if you want something else, you need to specify that in 'chrSet' parameter.",
+                    "format": "file-path"
                 },
-                "fasta": {
+                "caseSample": {
                     "type": "string",
-                    "format": "file-path",
-                    "exists": true,
-                    "mimetype": "text/plain",
-                    "pattern": "^\\S+\\.fn?a(sta)?(\\.gz)?$",
-                    "description": "Path to FASTA genome file.",
-                    "help_text": "This parameter is *mandatory* if `--genome` is not specified. If you don't have a BWA index available this will be generated for you automatically. Combine with `--save_reference` to save BWA index for future runs.",
-                    "fa_icon": "far fa-file-code"
+                    "description": "One column text file containing list of samples, one sample ID per line.",
+                    "help_text": "One column text file containing list of samples, one sample ID per line.",
+                    "format": "file-path"
                 },
-                "igenomes_ignore": {
-                    "type": "boolean",
-                    "description": "Do not load the iGenomes reference config.",
-                    "fa_icon": "fas fa-ban",
-                    "hidden": true,
-                    "help_text": "Do not load `igenomes.config` when running the pipeline. You may choose this option if you observe clashes between custom parameters and those supplied in `igenomes.config`."
-                },
-                "igenomes_base": {
+                "controlDataFolder": {
                     "type": "string",
+                    "description": "Input files needed for the pipeline from the control dataset, for now we support 3 gnomAD datasets as control, gnomADv2exome, gnomADv4.1exome, gnomADv4.1genome. You need to download these datasets from our Amazon AWS s3 bucket: s3://cocorv-resource-files/",
+                    "help_text": "Input files needed for the pipeline from the control dataset, for now we support 3 gnomAD datasets as control, gnomADv2exome, gnomADv4.1exome, gnomADv4.1genome. You need to download these datasets from our Amazon AWS s3 bucket: s3://cocorv-resource-files/",
+                    "format": "directory-path"
+                },
+                "reference": {
+                    "type": "string",
+                    "default": "GRCh38",
+                    "description": "Reference genome build version, allowed values are 'GRCh37', 'GRCh38'. Default value: 'GRCh38'",
+                    "help_text": "Reference genome build version, allowed values are 'GRCh37', 'GRCh38'. Default value: 'GRCh38'"
+                },
+                "gnomADVersion": {
+                    "type": "string",
+                    "default": "v4exome",
+                    "description": "gnomAD version, allowed values are 'v2exome', 'v4exome', 'v4genome' (for GRCh37 data use 'v2exome', for GRCh38, use 'v4exome' or 'v4genome'). Default value: 'v4exome'",
+                    "help_text": "gnomAD version, allowed values are 'v2exome', 'v4exome', 'v4genome' (for GRCh37 data use 'v2exome', for GRCh38, use 'v4exome' or 'v4genome'). Default value: 'v4exome'"
+                },
+                "caseBed": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Bed file containing good coverage positions from case vcf files where 90% samples have coverage >= 10.",
+                    "help_text": "Bed file containing good coverage positions from case vcf files where 90% samples have coverage >= 10.",
+                    "format": "file-path"
+                },
+                "chrSet": {
+                    "type": "string",
+                    "default": "1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22",
+                    "description": "List of chromosomes you want to split your jointVCF file, you can test only for chromosome 21 and 22, in that case, it will be '21 22'",
+                    "help_text": "List of chromosomes you want to split your jointVCF file, you can test only for chromosome 21 and 22, in that case, it will be '21 22'"
+                },
+                "variantGroupCustom": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "An optional R file with functions or a tab separated two column text file defining the variants of interest",
+                    "help_text": "An optional R file with functions or a tab separated two column text file defining the variants of interest",
+                    "format": "file-path"
+                },
+                "extraParamJason": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "An optional JASON file to provide extra parameters to the custuomized file variantGroupCustom",
+                    "help_text": "An optional JASON file to provide extra parameters to the custuomized file variantGroupCustom",
+                    "format": "file-path"
+                },
+                "annotationUsed": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "A one column file without the header listing all required annotations used in variant filtering. AC AN annotations from ACANConfig will be added automatically",
+                    "help_text": "A one column file without the header listing all required annotations used in variant filtering. AC AN annotations from ACANConfig will be added automatically",
+                    "format": "file-path"
+                },
+                "CoCoRVOptions": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Optional options for CoCoRV module",
+                    "help_text": "Optional options for CoCoRV module"
+                },
+                "groupColumn": {
+                    "type": "string",
+                    "default": "Gene.refGene",
+                    "description": "The column header used to pull Gene name from annotation file, default: 'Gene.refGene', for VEP, use 'SYMBOL'",
+                    "help_text": "The column header used to pull Gene name from annotation file, default: 'Gene.refGene', for VEP, use 'SYMBOL'"
+                },
+                "variantInclude": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "A one column file specifying the variants to be included, it will also include variants specified in variantExcludeFile",
+                    "help_text": "A one column file specifying the variants to be included, it will also include variants specified in variantExcludeFile",
+                    "format": "file-path"
+                },
+                "batchSize": {
+                    "type": "integer",
+                    "default": 10000,
+                    "description": "Batch size for CoCoRV module",
+                    "help_text": "Batch size for CoCoRV module"
+                },
+                "CoCoRVFolder": {
+                    "type": "string",
+                    "default": "/opt/cocorv/",
+                    "description": "The folder path containing CoCoRV R package",
+                    "help_text": "The folder path containing CoCoRV R package",
                     "format": "directory-path",
-                    "description": "The base path to the igenomes reference files",
-                    "fa_icon": "fas fa-ban",
+                    "hidden": true
+                },
+                "AFMax": {
+                    "type": "number",
+                    "default": 0.0005,
+                    "description": "The maximum of the alternate allele frequency, for gnomADv2exome, we used 0.0001, for gnomADv4.1genome and v4.1exome, we used 0.0005",
+                    "help_text": "The maximum of the alternate allele frequency, for gnomADv2exome, we used 0.0001, for gnomADv4.1genome and v4.1exome, we used 0.0005"
+                },
+                "variantMissing": {
+                    "type": "number",
+                    "default": 0.1,
+                    "description": "The maximum missingness allowed for a variant",
+                    "help_text": "The maximum missingness allowed for a variant"
+                },
+                "variantGroup": {
+                    "type": "string",
+                    "default": "annovar_pathogenic",
+                    "description": "A specified variant group to use for test or a self defined function to define the variants of interest",
+                    "help_text": "A specified variant group to use for test or a self defined function to define the variants of interest"
+                },
+                "REVELThreshold": {
+                    "type": "number",
+                    "default": 0.65,
+                    "description": "The minimum REVEL score for pathogenic missense variants",
+                    "help_text": "The minimum REVEL score for pathogenic missense variants"
+                },
+                "pLDControl": {
+                    "type": "number",
+                    "default": 0.05,
+                    "description": "The p-value threshold to detect high LD variants in control",
+                    "help_text": "The p-value threshold to detect high LD variants in control"
+                },
+                "controlBed": {
+                    "type": "string",
+                    "default": "null/coverage10x.bed.gz",
+                    "description": "Bed file containing good coverage positions from gnomAD control files where 90% samples have coverage >= 10.",
+                    "help_text": "Bed file containing good coverage positions from gnomAD control files where 90% samples have coverage >= 10.",
+                    "hidden": true
+                },
+                "refFASTA": {
+                    "type": "string",
+                    "default": "null/reference.fasta.gz",
+                    "description": "The reference genome file",
+                    "help_text": "The reference genome file",
+                    "hidden": true
+                },
+                "caseVCFFileList": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "If you split you joined called VCF file by chromosome, you can supply the VCF file list here, the list needs to be in csv format (comma seperated), the column headers are chr,vcf. If you want to run for some chromosomes, i.e., chr 21 and 22, then you need to give here only chr number and vcf files for chr 21 and 22.",
+                    "help_text": "If you split you joined called VCF file by chromosome, you can supply the VCF file list here, the list needs to be in csv format (comma seperated), the column headers are chr,vcf. If you want to run for some chromosomes, i.e., chr 21 and 22, then you need to give here only chr number and vcf files for chr 21 and 22.",
+                    "format": "file-path"
+                },
+                "caseNormalizedVCFFileList": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Pre-normalized case VCF files, you can use the pre-normalized case VCF files to skip the normalization steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,vcf,index. Then you need to list the chromosome number and the coresponding vcf file and .tbi file for that chromosome.",
+                    "help_text": "Pre-normalized case VCF files, you can use the pre-normalized case VCF files to skip the normalization steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,vcf,index. Then you need to list the chromosome number and the coresponding vcf file and .tbi file for that chromosome.",
+                    "format": "file-path"
+                },
+                "caseAnnotatedVCFFileList": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Pre-annotated case VCF files, you can use the pre-annotated case VCF files to skip the annotation steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,vcf,index. Then you need to list the chromosome number and the coresponding vcf file and .tbi file for that chromosome.",
+                    "help_text": "Pre-annotated case VCF files, you can use the pre-annotated case VCF files to skip the annotation steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,vcf,index. Then you need to list the chromosome number and the coresponding vcf file and .tbi file for that chromosome.",
+                    "format": "file-path"
+                },
+                "caseGenotypeGDSFileList": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "GDS converted genotype case VCF files, you can use it to skip the genotype GDS conversion steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,gds. Then you need to list the chromosome number and the coresponding gds file for that chromosome.",
+                    "help_text": "GDS converted genotype case VCF files, you can use it to skip the genotype GDS conversion steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,gds. Then you need to list the chromosome number and the coresponding gds file for that chromosome.",
+                    "format": "file-path"
+                },
+                "caseAnnotationGDSFileList": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "GDS converted annotated case VCF files, you can use it to skip the annotation GDS conversion steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,gds. Then you need to list the chromosome number and the coresponding vcf file for that chromosome.",
+                    "help_text": "GDS converted annotated case VCF files, you can use it to skip the annotation GDS conversion steps in the pipeline, the list needs to be in csv format (comma seperated), the column headers are chr,gds. Then you need to list the chromosome number and the coresponding vcf file for that chromosome.",
+                    "format": "file-path"
+                },
+                "controlGenotypeGDSFileList": {
+                    "type": "string",
+                    "default": "null/controlGenotypeGDS.csv",
                     "hidden": true,
-                    "default": "s3://ngi-igenomes/igenomes/"
+                    "description": "GDS converted genotype control VCF files from gnomAD control data",
+                    "help_text": "GDS converted genotype control VCF files from gnomAD control data",
+                    "format": "file-path"
+                },
+                "controlAnnotationGDSFileList": {
+                    "type": "string",
+                    "default": "null/controlAnnotationGDS.csv",
+                    "hidden": true,
+                    "description": "GDS converted annotated control VCF files from gnomAD control data",
+                    "help_text": "GDS converted annotated control VCF files from gnomAD control data",
+                    "format": "file-path"
+                },
+                "ACANConfig": {
+                    "type": "string",
+                    "default": "null/stratified_config_gnomadV4.asj.txt",
+                    "description": "the configuration file specifying the ancestry groups for analysis",
+                    "help_text": "the configuration file specifying the ancestry groups for analysis",
+                    "format": "file-path"
+                },
+                "variantExclude": {
+                    "type": "string",
+                    "default": "null/gnomAD41WGSExtraExcludeInCodingExcludeTAS2R46.txt.gz",
+                    "hidden": true,
+                    "description": "A one column file specifying the variants to be excluded",
+                    "help_text": "A one column file specifying the variants to be excluded",
+                    "format": "file-path"
+                }
+            }
+        },
+        "annotation_options": {
+            "title": "Annotation options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define different pipeline parameters for annotating with ANNOVAR and VEP.",
+            "required": ["annovarFolder"],
+            "properties": {
+                "annovarFolder": {
+                    "type": "string",
+                    "description": "Resource folder for the annotation tool Annovar, you can download this folder from our Amazon AWS s3 bucket: s3://cocorv-resource-files/annovarFolder/",
+                    "help_text": "Resource folder for the annotation tool Annovar, you can download this folder from our Amazon AWS s3 bucket: s3://cocorv-resource-files/annovarFolder/",
+                    "format": "directory-path"
+                },
+                "vepFolder": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Resource folder for the annotation tool VEP, you can download this folder from our Amazon AWS s3 bucket: s3://cocorv-resource-files/vepFolder/",
+                    "help_text": "Resource folder for the annotation tool VEP, you can download this folder from our Amazon AWS s3 bucket: s3://cocorv-resource-files/vepFolder/",
+                    "format": "directory-path"
+                },
+                "protocol": {
+                    "type": "string",
+                    "default": "refGene,gnomad211_exome,revel",
+                    "description": "Annotation options for Annovar, default: 'refGene,gnomad211_exome,revel'",
+                    "help_text": "Annotation options for Annovar, default: 'refGene,gnomad211_exome,revel'"
+                },
+                "operation": {
+                    "type": "string",
+                    "default": "g,f,f",
+                    "description": "Annotation options for Annovar, default: 'g,f,f'",
+                    "help_text": "Annotation options for Annovar, default: 'g,f,f'"
+                },
+                "annotationTool": {
+                    "type": "string",
+                    "default": "ANNOVAR",
+                    "description": "If you want to run only VEP annotation, you need to put 'VEP' for this parameter, if you want both annovar and vep, you need to put 'ANNOVAR_VEP'. Default: 'ANNOVAR', meaning only run Annovar.",
+                    "help_text": "If you want to run only VEP annotation, you need to put 'VEP' for this parameter, if you want both annovar and vep, you need to put 'ANNOVAR_VEP'. Default: 'ANNOVAR', meaning only run Annovar."
+                },
+                "VEPAnnotations": {
+                    "type": "string",
+                    "default": "AM,SPLICEAI,LOFTEE,CADD",
+                    "description": "VEP annotation parameters, list of VEP plugins to run",
+                    "help_text": "VEP annotation parameters, list of VEP plugins to run"
+                },
+                "VCFAnno": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Annotation options for Annovar",
+                    "help_text": "Annotation options for Annovar"
+                },
+                "toml": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "Annotation options for Annovar",
+                    "help_text": "Annotation options for Annovar"
+                }
+            }
+        },
+        "ancestry_prediction_options": {
+            "title": "Ancestry prediction options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define different pipeline parameters for predicting ancestry.",
+            "properties": {
+                "casePopulation": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "File containing estimation of the population/ethnicity of case samples using gnomAD classifier, optional, if not specified nextflow app will estimate the population using gnomAD classifier.",
+                    "help_text": "File containing estimation of the population/ethnicity of case samples using gnomAD classifier, optional, if not specified nextflow app will estimate the population using gnomAD classifier.",
+                    "format": "file-path"
+                },
+                "gnomADPCPosition": {
+                    "type": "string",
+                    "default": "null/ancestry/hail_positions.chr.pos.tsv",
+                    "hidden": true,
+                    "description": "The files containing variant positions needed for gnomAD ancestry prediction classifier",
+                    "help_text": "The files containing variant positions needed for gnomAD ancestry prediction classifier"
+                },
+                "loadingPath": {
+                    "type": "string",
+                    "default": "null/ancestry/gnomad.pca_loadings.ht/",
+                    "hidden": true,
+                    "description": "Files needed for gnomAD ancestry prediction classifier",
+                    "help_text": "Files needed for gnomAD ancestry prediction classifier"
+                },
+                "rfModelPath": {
+                    "type": "string",
+                    "default": "null/ancestry/gnomad.RF_fit.onnx",
+                    "hidden": true,
+                    "description": "Files needed for gnomAD ancestry prediction classifier",
+                    "help_text": "Files needed for gnomAD ancestry prediction classifier"
+                }
+            }
+        },
+        "sex_stratification_options": {
+            "title": "Sex stratification options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define different pipeline parameters for sex-stratified analysis.",
+            "properties": {
+                "addSexToCaseGroup": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "If you want to do sex stratified analysis, need to put 'true' here. Default: 'false'",
+                    "help_text": "If you want to do sex stratified analysis, need to put 'true' here. Default: 'false'"
+                },
+                "covariate": {
+                    "type": "string",
+                    "default": "NA",
+                    "description": "a file with header, 1st column is ID, and must have a column named 'Sex'. The sex is coded either as Male/Female, 1/2, or XY/XX, NA means missing",
+                    "help_text": "a file with header, 1st column is ID, and must have a column named 'Sex'. The sex is coded either as Male/Female, 1/2, or XY/XX, NA means missing",
+                    "format": "file-path"
+                }
+            }
+        },
+        "post_check_options": {
+            "title": "Post check options",
+            "type": "object",
+            "fa_icon": "fas fa-terminal",
+            "description": "Define different pipeline parameters for post checking the CoCoRV results by generating variant sample info for top K genes.",
+            "properties": {
+                "topK": {
+                    "type": "integer",
+                    "default": 1000,
+                    "description": "Top K genes for generating variant-sample information for each gene",
+                    "help_text": "Top K genes for generating variant-sample information for each gene"
+                },
+                "caseControl": {
+                    "type": "string",
+                    "default": "case",
+                    "description": "Case or control for which top K genes need to be examined",
+                    "help_text": "Case or control for which top K genes need to be examined"
                 }
             }
         },
@@ -166,14 +464,6 @@
                     "fa_icon": "fas fa-remove-format",
                     "hidden": true
                 },
-                "max_multiqc_email_size": {
-                    "type": "string",
-                    "description": "File size limit when attaching MultiQC reports to summary emails.",
-                    "pattern": "^\\d+(\\.\\d+)?\\.?\\s*(K|M|G|T)?B$",
-                    "default": "25.MB",
-                    "fa_icon": "fas fa-file-upload",
-                    "hidden": true
-                },
                 "monochrome_logs": {
                     "type": "boolean",
                     "description": "Do not use coloured log outputs.",
@@ -186,24 +476,6 @@
                     "fa_icon": "fas fa-people-group",
                     "help_text": "Incoming hook URL for messaging service. Currently, MS Teams and Slack are supported.",
                     "hidden": true
-                },
-                "multiqc_config": {
-                    "type": "string",
-                    "format": "file-path",
-                    "description": "Custom config file to supply to MultiQC.",
-                    "fa_icon": "fas fa-cog",
-                    "hidden": true
-                },
-                "multiqc_logo": {
-                    "type": "string",
-                    "description": "Custom logo file to supply to MultiQC. File name must also be set in the MultiQC config file",
-                    "fa_icon": "fas fa-image",
-                    "hidden": true
-                },
-                "multiqc_methods_description": {
-                    "type": "string",
-                    "description": "Custom MultiQC yaml file containing HTML including a methods description.",
-                    "fa_icon": "fas fa-cog"
                 },
                 "validate_params": {
                     "type": "boolean",
@@ -233,7 +505,19 @@
             "$ref": "#/$defs/input_output_options"
         },
         {
-            "$ref": "#/$defs/reference_genome_options"
+            "$ref": "#/$defs/pipeline_options"
+        },
+        {
+            "$ref": "#/$defs/annotation_options"
+        },
+        {
+            "$ref": "#/$defs/ancestry_prediction_options"
+        },
+        {
+            "$ref": "#/$defs/sex_stratification_options"
+        },
+        {
+            "$ref": "#/$defs/post_check_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"
