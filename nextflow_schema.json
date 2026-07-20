@@ -238,7 +238,6 @@
                 "variantExclude": {
                     "type": "string",
                     "default": "null/gnomAD41WGSExtraExcludeInCodingExcludeTAS2R46.txt.gz",
-                    "hidden": true,
                     "description": "A one column file specifying the variants to be excluded",
                     "help_text": "A one column file specifying the variants to be excluded",
                     "format": "file-path"

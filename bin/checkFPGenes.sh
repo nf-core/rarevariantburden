@@ -1,3 +1,6 @@
+#!/bin/bash
+set -eu -o pipefail
+
 main() {
     CoCoRVFolder=$1
     cocorvOut=$2

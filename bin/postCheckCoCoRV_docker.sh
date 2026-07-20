@@ -1,4 +1,5 @@
-set -eu
+#!/bin/bash
+set -eu -o pipefail
 
 main() {
     chrGeneList=$1
@@ -65,7 +66,7 @@ main() {
             variantFile=$(ls ${fileID}.*${casecontrol}.group);
         fi
 
-        variants=$(grep "^${gene}\\s" ${variantFile} | sed "s/^${gene}\\s//")
+        variants=$(grep "^${gene}\\s" ${variantFile} | sed "s/^${gene}\\s//") || true
         echo ${variants}
 
         if [[ ${variants} == "" ]]; then
@@ -85,16 +86,16 @@ main() {
             fi
             if [[ ${vcfGTSuffix} == "" ]]; then
                 # for full genotype cases with annotations
-                cmd="bcftools view ${sampleOption} -r ${position} ${fileID}${vcfAnnoSuffix} | bcftools query -f'[%CHROM-%POS-%REF-%ALT\t%SAMPLE\t%GT\t%AD\t%"${annotationsQuery}"\n]' -i'AC>0 & GT=\"alt\"' | grep -f ${variantsTempFile} | sort -k4,4 >> ${outputFile}"
+                cmd="bcftools view ${sampleOption} -r ${position} ${fileID}${vcfAnnoSuffix} | bcftools query -f'[%CHROM-%POS-%REF-%ALT\t%SAMPLE\t%GT\t%AD\t%"${annotationsQuery}"\n]' -i'AC>0 & GT=\"alt\"' | (grep -f ${variantsTempFile} || true) | sort -k4,4 >> ${outputFile}"
                 # echo $cmd
                 echo $cmd > ${outputFile}.sh
                 bash ${outputFile}.sh
             else
                 # extract genotypes
-                bcftools view ${sampleOption} -r ${position} ${fileID}${vcfGTSuffix} | bcftools query -f'[%CHROM-%POS-%REF-%ALT\t%SAMPLE\t%GT\t%AD\t%QD\t%AC\t%AN\n]' -i'AC>0 & GT="alt"' | grep -f ${variantsTempFile} | sort -k4,4 > ${outputFile}.gt.tsv
+                bcftools view ${sampleOption} -r ${position} ${fileID}${vcfGTSuffix} | bcftools query -f'[%CHROM-%POS-%REF-%ALT\t%SAMPLE\t%GT\t%AD\t%QD\t%AC\t%AN\n]' -i'AC>0 & GT="alt"' | (grep -f ${variantsTempFile} || true) | sort -k4,4 > ${outputFile}.gt.tsv
 
                 # extract annotations
-                cmd="bcftools view -r ${position} ${fileID}${vcfAnnoSuffix} | bcftools query -f'%CHROM-%POS-%REF-%ALT\t%"${annotationsQuery}"\n' | grep -f ${variantsTempFile} | sort -k4,4 > ${outputFile}.anno.tsv"
+                cmd="bcftools view -r ${position} ${fileID}${vcfAnnoSuffix} | bcftools query -f'%CHROM-%POS-%REF-%ALT\t%"${annotationsQuery}"\n' | (grep -f ${variantsTempFile} || true) | sort -k4,4 > ${outputFile}.anno.tsv"
                 # echo $cmd
                 echo $cmd > ${outputFile}.sh
                 bash ${outputFile}.sh >> postCheck.log 2>&1
@@ -108,7 +109,7 @@ main() {
                 addHeader=F
             fi
             # for summary counts without genotypes
-            cmd="bcftools query -r ${position} -f '%CHROM-%POS-%REF-%ALT\t%"${annotationsQuery}"\n' ${fileID}${vcfAnnoSuffix} | grep -f ${variantsTempFile} | sort -k2,2g >> ${outputFile}"
+            cmd="bcftools query -r ${position} -f '%CHROM-%POS-%REF-%ALT\t%"${annotationsQuery}"\n' ${fileID}${vcfAnnoSuffix} | (grep -f ${variantsTempFile} || true) | sort -k2,2g >> ${outputFile}"
             # echo $cmd
             echo $cmd > ${outputFile}.sh
             bash ${outputFile}.sh
