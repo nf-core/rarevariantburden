@@ -198,7 +198,7 @@ workflow RAREVARIANTBURDEN {
     postCheckInputChannel = normalizeQCAnnotateChannel.join(cocorvOutChannel)
 
     postCheckPerChr(postCheckInputChannel, params.topK, params.caseControl, params.reference, params.caseSample)
-    mergePostCheck(postCheckPerChr.out.collect(), params.topK, params.caseControl)
+    mergePostCheck(postCheckPerChr.out.collect(), params.topK, params.caseControl, mergeCoCoRVResults.out.association_res)
 
     emit:association_res = mergeCoCoRVResults.out.association_res // channel: /path/to/association.tsv
     qqplot               = QQPlotAndFDR.out.qqplot                // channel: /path/to/association.tsv.dominant.nRep1000.pdf

@@ -581,9 +581,11 @@ process mergePostCheck {
     path postCheckResults
     val topK
     val caseControl
+    path associationResult
 
     output:
     path "top${topK}.association.tsv.${caseControl}.variants.tsv"
+    path "top${topK}-sorted.association.tsv.${caseControl}.variants.tsv"
 
     script:
     """
@@ -599,6 +601,7 @@ process mergePostCheck {
         fi
     done
     cat "postCheck.tsv.tmp" > "top${topK}.association.tsv.${caseControl}.variants.tsv"
+    sort.py --data "top${topK}.association.tsv.${caseControl}.variants.tsv" --order ${associationResult} --output "top${topK}-sorted.association.tsv.${caseControl}.variants.tsv"
     """
 
 }
