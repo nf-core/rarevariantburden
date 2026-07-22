@@ -24,7 +24,8 @@ include {
     mergeCoCoRVResults;
     QQPlotAndFDR;
     postCheckPerChr;
-    mergePostCheck
+    mergePostCheck;
+    BUILD_COCORV
 } from '../modules/local/cocorv'
 
 /*
@@ -40,6 +41,21 @@ workflow RAREVARIANTBURDEN {
     caseSample // caseSample read in from --caseSample
 
     main:
+
+    // Docker/Singularity images have the CoCoRV R package pre-installed at
+    // /opt/cocorv/, but conda/mamba envs don't - the package needs to be
+    // built from source (it has C++ code via Rcpp/RcppArmadillo). Only do
+    // this when conda/mamba is actually in use; docker/singularity users see
+    // no change at all.
+    activeProfiles = workflow.profile.tokenize(',').collect { it.trim() }
+    useCondaCoCoRV = activeProfiles.any { it == 'conda' || it == 'mamba' }
+
+    if (useCondaCoCoRV) {
+        BUILD_COCORV(Channel.fromPath("${params.CoCoRVFolder}/CoCoRV", checkIfExists: true))
+        cocorvRlibChannel = BUILD_COCORV.out.rlib.first()
+    } else {
+        cocorvRlibChannel = Channel.value([])
+    }
 
     // coverage
     if (params.caseBed == "NA") {
@@ -175,7 +191,8 @@ workflow RAREVARIANTBURDEN {
             params.ACANConfig,
             params.variantExclude,
             params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds",
-            params.caseSample)
+            params.caseSample,
+            cocorvRlibChannel)
     }
     else if (params.reference == "GRCh38") {
         cocorvOutChannel = CoCoRV(caseChannel.join(controlChannel),
@@ -184,7 +201,8 @@ workflow RAREVARIANTBURDEN {
             params.ACANConfig,
             params.variantExclude,
             params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds",
-            params.caseSample)
+            params.caseSample,
+            cocorvRlibChannel)
     }
 
     // merge CoCoRV results
@@ -192,7 +210,7 @@ workflow RAREVARIANTBURDEN {
         cocorvOutChannel.map{it[3]}.collect())
 
     // QQ plot and FDR
-    QQPlotAndFDR(mergeCoCoRVResults.out.association_res, mergeCoCoRVResults.out.caseVariants_res, mergeCoCoRVResults.out.controlVariants_res)
+    QQPlotAndFDR(mergeCoCoRVResults.out.association_res, mergeCoCoRVResults.out.caseVariants_res, mergeCoCoRVResults.out.controlVariants_res, cocorvRlibChannel)
 
     normalizeQCAnnotateChannel = normalizeQCChannel.join(annotateChannel)
     postCheckInputChannel = normalizeQCAnnotateChannel.join(cocorvOutChannel)

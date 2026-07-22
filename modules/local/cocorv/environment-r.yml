@@ -5,6 +5,9 @@ channels:
 dependencies:
   - openjdk=8
   - cmake
+  - c-compiler
+  - cxx-compiler
+  - make
   - python=3.10.2
   - pip
   - psycopg2

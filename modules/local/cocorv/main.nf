@@ -1,7 +1,31 @@
+process BUILD_COCORV {
+    // Only ever invoked by the workflow when the conda/mamba profile is active.
+    // Docker/Singularity images already have the CoCoRV R package pre-installed
+    // at /opt/cocorv/, so this process is skipped entirely for those profiles.
+    tag "CoCoRV R package"
+    label 'process_single'
+
+    conda "${moduleDir}/environment-r.yml"
+    container 'stithi/cocorv-nextflow-r:v7'
+
+    input:
+    path cocorvSource
+
+    output:
+    path "cocorv_rlib", emit: rlib
+
+    script:
+    """
+    mkdir -p cocorv_rlib
+    R CMD INSTALL --library=cocorv_rlib ${cocorvSource}
+    """
+}
+
 process splitJointVCF {
     tag "${caseJointVCF}_${chr}"
     label 'process_single'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -27,6 +51,7 @@ process coverageIntersect {
     label 'process_single'
     publishDir "${params.outdir}", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -48,6 +73,7 @@ process normalizeQC {
     label 'process_single'
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -71,6 +97,7 @@ process skipNormalization {
     label 'process_single'
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -91,6 +118,7 @@ process annotate_annovar {
     label 'process_medium'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
+    conda "${moduleDir}/environment-vep.yml"
     container 'stithi/cocorv-nextflow-vep:v3'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -122,6 +150,7 @@ process annotate_vep {
     label 'process_high'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
+    conda "${moduleDir}/environment-vep.yml"
     container 'stithi/cocorv-nextflow-vep:v3'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -190,6 +219,7 @@ process skipAnnotation {
     label 'process_single'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -210,6 +240,7 @@ process caseGenotypeGDS {
     label 'process_medium'
     publishDir "${params.outdir}/vcf_vqsr_normalizedQC", mode: 'copy'
 
+    conda "${moduleDir}/environment-r.yml"
     container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -233,6 +264,7 @@ process caseAnnotationGDS {
     label 'process_medium'
     publishDir "${params.outdir}/annotation", mode: 'copy'
 
+    conda "${moduleDir}/environment-r.yml"
     container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -256,6 +288,7 @@ process extractGnomADPositions {
     label 'process_single'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -277,6 +310,7 @@ process mergeExtractedPositions {
     label 'process_single'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -296,6 +330,7 @@ process RFPrediction {
     label 'process_low'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     input:
@@ -324,6 +359,7 @@ process addSexToGroup {
     label 'process_single'
     publishDir "${params.outdir}/gnomADPosition", mode: 'copy'
 
+    conda "${moduleDir}/environment-r.yml"
     container 'stithi/cocorv-nextflow-r:v6'
 
     input:
@@ -344,6 +380,7 @@ process CoCoRV {
     label 'process_high_memory'
     publishDir "${params.outdir}/CoCoRV/byChr", mode: 'copy'
 
+    conda "${moduleDir}/environment-r.yml"
     container 'stithi/cocorv-nextflow-r:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -357,6 +394,7 @@ process CoCoRV {
     path variantExclude
     path highLDVariantFile
     path caseSample
+    path(cocorvRlib) // empty list ([]) for docker/singularity, real path for conda/mamba
 
     output:
     tuple val(chr), path("${chr}.association.tsv"), path("${chr}.case.group"), path("${chr}.control.group")
@@ -378,7 +416,13 @@ process CoCoRV {
         end = parts[2]
     }
 
+    // Only set for conda/mamba: docker/singularity images already have
+    // CoCoRV installed in R's default library, so this stays empty for them
+    // and the generated command below is unchanged.
+    def rLibsExport = cocorvRlib ? "export R_LIBS=\"\$(pwd)/${cocorvRlib}:\${R_LIBS:-}\"" : ""
+
     """
+    ${rLibsExport}
     if [[ "${start}" != "" ]]; then
         # overlap with the shad region
         checkChr=\$(zcat ${intersectBed} | head -1 | cut -f1)
@@ -448,6 +492,7 @@ process mergeCoCoRVResults {
     label 'process_medium'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
+    conda "${moduleDir}/environment-r.yml"
     container 'stithi/cocorv-nextflow-r:v6'
 
     input:
@@ -488,6 +533,7 @@ process QQPlotAndFDR {
     label 'process_medium'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
+    conda "${moduleDir}/environment-r.yml"
     container 'stithi/cocorv-nextflow-r:v6'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -497,13 +543,16 @@ process QQPlotAndFDR {
     path("association.tsv")
     path("kept.variants.case.txt")
     path("kept.variants.control.txt")
+    path(cocorvRlib) // empty list ([]) for docker/singularity, real path for conda/mamba
 
     output:
     path "association.tsv.dominant.nRep1000.pdf", emit: qqplot
     path "association.tsv.dominant.nRep1000.fdr.tsv", emit: fdr_res
 
     script:
+    def rLibsExport = cocorvRlib ? "export R_LIBS=\"\$(pwd)/${cocorvRlib}:\${R_LIBS:-}\"" : ""
     """
+    ${rLibsExport}
     Rscript ${params.CoCoRVFolder}/utilities/QQPlotAndFDR.R "association.tsv" \
         "association.tsv.dominant.nRep1000" --setID gene \
         --outColumns gene --n 1000 \
@@ -516,6 +565,7 @@ process postCheck {
     label 'process_high_memory'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -547,6 +597,7 @@ process postCheckPerChr {
     tag "${chr}"
     label 'process_low'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }
@@ -572,6 +623,7 @@ process mergePostCheck {
     label 'process_low'
     publishDir "${params.outdir}/CoCoRV", mode: 'copy'
 
+    conda "${moduleDir}/environment.yml"
     container 'stithi/cocorv-nextflow-python:v7'
 
     errorStrategy { task.exitStatus in 130..140 ? 'retry' : 'terminate' }

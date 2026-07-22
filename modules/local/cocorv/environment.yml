@@ -13,3 +13,4 @@ dependencies:
   - bedtools
   - bcftools=1.14
   - tabix
+  - pandas
