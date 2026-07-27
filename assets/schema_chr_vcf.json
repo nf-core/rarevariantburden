@@ -8,10 +8,7 @@
         "type": "object",
         "properties": {
             "chr": {
-                "type": [
-                    "string",
-                    "integer"
-                ],
+                "type": ["string", "integer"],
                 "errorMessage": "Chromosome must be provided"
             },
             "vcf": {
@@ -22,9 +19,6 @@
                 "errorMessage": "VCF file must exist and end in .vcf.gz"
             }
         },
-        "required": [
-            "chr",
-            "vcf"
-        ]
+        "required": ["chr", "vcf"]
     }
 }

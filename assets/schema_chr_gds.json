@@ -8,10 +8,7 @@
         "type": "object",
         "properties": {
             "chr": {
-                "type": [
-                    "string",
-                    "integer"
-                ],
+                "type": ["string", "integer"],
                 "errorMessage": "Chromosome must be provided"
             },
             "gds": {
@@ -22,9 +19,6 @@
                 "errorMessage": "GDS file must exist and end in .gds"
             }
         },
-        "required": [
-            "chr",
-            "gds"
-        ]
+        "required": ["chr", "gds"]
     }
 }

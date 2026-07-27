@@ -8,10 +8,7 @@
         "type": "object",
         "properties": {
             "chr": {
-                "type": [
-                    "string",
-                    "integer"
-                ],
+                "type": ["string", "integer"],
                 "errorMessage": "Chromosome must be provided"
             },
             "vcf": {
@@ -29,10 +26,6 @@
                 "errorMessage": "Index file must exist and end in .tbi or .csi"
             }
         },
-        "required": [
-            "chr",
-            "vcf",
-            "index"
-        ]
+        "required": ["chr", "vcf", "index"]
     }
 }
