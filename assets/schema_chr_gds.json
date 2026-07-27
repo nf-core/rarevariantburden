@@ -1,0 +1,30 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/rarevariantburden/master/assets/schema_chr_gds.json",
+    "title": "nf-core/rarevariantburden pipeline - chromosome/GDS file list schema",
+    "description": "Schema for file lists that provide a chromosome and a GDS file (used by params.caseGenotypeGDSFileList, params.caseAnnotationGDSFileList, params.controlGenotypeGDSFileList, params.controlAnnotationGDSFileList)",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "chr": {
+                "type": [
+                    "string",
+                    "integer"
+                ],
+                "errorMessage": "Chromosome must be provided"
+            },
+            "gds": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.gds$",
+                "errorMessage": "GDS file must exist and end in .gds"
+            }
+        },
+        "required": [
+            "chr",
+            "gds"
+        ]
+    }
+}

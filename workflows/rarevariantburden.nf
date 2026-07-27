@@ -3,7 +3,7 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMap; samplesheetToList } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_rarevariantburden_pipeline'
@@ -79,9 +79,8 @@ workflow RAREVARIANTBURDEN {
     } else {
         // joint VCF file is already splitted by chromosome
         caseVCF_ch = Channel
-                        .fromPath(params.caseVCFFileList)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.chr, file(row.vcf)) } // Create a tuple of chr and case VCF file path
+                        .fromList(samplesheetToList(params.caseVCFFileList, "${projectDir}/assets/schema_chr_vcf.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and case VCF file path
 
         if (params.caseNormalizedVCFFileList == "NA") {
             normalizeQC(caseVCF_ch, params.refFASTA, params.refFASTA + ".fai", params.refFASTA + ".gzi")
@@ -90,9 +89,8 @@ workflow RAREVARIANTBURDEN {
         else {
             //already have normalized vcf files
             normalizeQCChannel = Channel
-                                .fromPath(params.caseNormalizedVCFFileList)
-                                .splitCsv(header: true)
-                                .map { row -> tuple(row.chr, file(row.vcf), file(row.index)) } // Create a tuple of chr, normalized VCF file path, index file path
+                                .fromList(samplesheetToList(params.caseNormalizedVCFFileList, "${projectDir}/assets/schema_chr_vcf_index.json"))
+                                .map { row -> tuple(row[0].toString(), row[1], row[2]) } // Create a tuple of chr, normalized VCF file path, index file path
         }
     }
 
@@ -117,9 +115,8 @@ workflow RAREVARIANTBURDEN {
     } else {
         //already have annotated vcf files
         annotateChannel = Channel
-                                .fromPath(params.caseAnnotatedVCFFileList)
-                                .splitCsv(header: true)
-                                .map { row -> tuple(row.chr, file(row.vcf), file(row.index)) } // Create a tuple of chr, annotated VCF file path, index file path
+                                .fromList(samplesheetToList(params.caseAnnotatedVCFFileList, "${projectDir}/assets/schema_chr_vcf_index.json"))
+                                .map { row -> tuple(row[0].toString(), row[1], row[2]) } // Create a tuple of chr, annotated VCF file path, index file path
     }
 
     if (params.caseGenotypeGDSFileList == "NA" && params.caseAnnotationGDSFileList == "NA") {
@@ -134,15 +131,13 @@ workflow RAREVARIANTBURDEN {
     else {
         //already have GDS converted genotype files and annotation files
         caseGenotypeGDSChannel = Channel
-                        .fromPath(params.caseGenotypeGDSFileList)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
+                        .fromList(samplesheetToList(params.caseGenotypeGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
 
 
         caseAnnotationGDSChannel = Channel
-                        .fromPath(params.caseAnnotationGDSFileList)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
+                        .fromList(samplesheetToList(params.caseAnnotationGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
 
     }
 
@@ -172,14 +167,12 @@ workflow RAREVARIANTBURDEN {
     // RFPrediction.out.view()
 
     controlGenotypeGDSChannel = Channel
-                        .fromPath(params.controlGenotypeGDSFileList)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
+                        .fromList(samplesheetToList(params.controlGenotypeGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
 
     controlAnnotationGDSChannel = Channel
-                        .fromPath(params.controlAnnotationGDSFileList)
-                        .splitCsv(header: true)
-                        .map { row -> tuple(row.chr, file(row.gds)) } // Create a tuple of chr and GDS file path
+                        .fromList(samplesheetToList(params.controlAnnotationGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
 
     controlChannel = controlGenotypeGDSChannel.join(controlAnnotationGDSChannel)
     caseChannel = caseGenotypeGDSChannel.join(caseAnnotationGDSChannel)
