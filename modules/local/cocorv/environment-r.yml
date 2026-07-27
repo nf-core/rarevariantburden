@@ -8,6 +8,7 @@ dependencies:
   - c-compiler
   - cxx-compiler
   - make
+  - sysroot_linux-64=2.17
   - python=3.10.2
   - pip
   - psycopg2
