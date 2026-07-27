@@ -2,7 +2,7 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/rarevariantburden/master/nextflow_schema.json",
     "title": "nf-core/rarevariantburden pipeline parameters",
-    "description": "This pipeline include tools for performing consistent summary count based rare variant burden test, which is useful when we only have sequenced cases data, no control data; here we can compare the cases against public summary count data, such as gnomAD data",
+    "description": "This pipeline include tools for performing consistent summary count based rare variant burden test, which is useful when we only have sequenced cases data, no control data; here we can compare the cases against public summary count data, such as gnomAD or All of Us data",
     "type": "object",
     "$defs": {
         "input_output_options": {

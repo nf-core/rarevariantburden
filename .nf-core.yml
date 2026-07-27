@@ -2,7 +2,8 @@ repository_type: pipeline
 
 nf_core_version: 4.0.2
 
-lint: {}
+lint:
+  schema_lint: false # This pipeline uses --caseJointVCF/--caseSample/etc. instead of the standard --input samplesheet, so the built-in "input" parameter check doesn't apply here.
 
 template:
   org: nf-core
