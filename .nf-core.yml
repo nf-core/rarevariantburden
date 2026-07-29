@@ -4,6 +4,13 @@ nf_core_version: 4.0.2
 
 lint:
   schema_lint: false # This pipeline uses --caseJointVCF/--caseSample/etc. instead of the standard --input samplesheet, so the built-in "input" parameter check doesn't apply here.
+  nextflow_config:
+    - params.input # Same reason as schema_lint above: no standard --input samplesheet in this pipeline.
+  files_exist:
+    - .github/workflows/linting_comment.yml
+  files_unchanged:
+    - .github/workflows/branch.yml
+    - .github/workflows/linting.yml
 
 template:
   org: nf-core
