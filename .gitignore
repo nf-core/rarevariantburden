@@ -9,3 +9,5 @@ testing*
 null/
 ._*
 *.Rhistory*
+.nf-test/
+.nf-test.log
