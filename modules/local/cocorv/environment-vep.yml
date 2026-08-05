@@ -1,0 +1,27 @@
+name: cocorv-env-vep
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - bcftools=1.14
+  - tabix
+  - ensembl-vep=110
+  - perl
+  - perl-bioperl
+  - perl-dbi
+  - perl-dbd-mysql
+  - perl-json
+  - htslib
+# NOTE (read before relying on this env):
+# This file only covers the VEP side of `annotate_vep`/`annotate_annovar`.
+# It intentionally does NOT provide:
+#   - ANNOVAR itself: it is not conda-distributable (requires manual
+#     registration/download from https://annovar.openbioinformatics.org),
+#     so `annotate_annovar` and the ANNOVAR leg of `annotate_vep` cannot
+#     be run purely from conda regardless of this file.
+#   - VEP plugins bundled in the custom container (loftee, CADD, SpliceAI,
+#     AlphaMissense, REVEL) or their data files - these must be downloaded
+#     separately and pointed to via --vepFolder as documented in the README.
+# For local conda testing you likely don't need this at all: the nf-core
+# `test` profile ships pre-annotated test data (caseAnnotatedVCFFileList)
+# and skips annotate_annovar/annotate_vep entirely.
