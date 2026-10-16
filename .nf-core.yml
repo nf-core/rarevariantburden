@@ -7,7 +7,7 @@ lint:
   nextflow_config:
     - params.input # Same reason as schema_lint above: no standard --input samplesheet in this pipeline.
   nf_test_content:
-    - versions.yml # This pipeline doesn't track/emit software versions (no versions.yml is produced), so the default test can't snapshot one.
+    - tests/default.nf.test # This pipeline doesn't track/emit software versions (no versions.yml is produced), so the default test can't snapshot one.
   files_exist:
     - .github/workflows/linting_comment.yml
   files_unchanged:
