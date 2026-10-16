@@ -95,7 +95,6 @@ workflow {
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        params.hook_url,
         NFCORE_RAREVARIANTBURDEN.out.association_res,
         NFCORE_RAREVARIANTBURDEN.out.qqplot
     )
