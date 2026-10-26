@@ -9,7 +9,7 @@ lint:
   nf_test_content:
     - versions.yml
   schema_lint: false
-nf_core_version: 4.1.0
+nf_core_version: 4.2.1
 repository_type: pipeline
 template:
   author: Saima Sultana Tithi
