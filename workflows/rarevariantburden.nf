@@ -3,12 +3,30 @@
     IMPORT MODULES / SUBWORKFLOWS / FUNCTIONS
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
-include { FASTQC                 } from '../modules/nf-core/fastqc/main'
-include { MULTIQC                } from '../modules/nf-core/multiqc/main'
-include { paramsSummaryMap       } from 'plugin/nf-schema'
+include { paramsSummaryMap; samplesheetToList } from 'plugin/nf-schema'
 include { paramsSummaryMultiqc   } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { softwareVersionsToYAML } from '../subworkflows/nf-core/utils_nfcore_pipeline'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_rarevariantburden_pipeline'
+
+include {
+    splitJointVCF;
+    coverageIntersect;
+    normalizeQC;
+    annotate_annovar;
+    annotate_vep;
+    caseGenotypeGDS;
+    caseAnnotationGDS;
+    extractGnomADPositions;
+    mergeExtractedPositions;
+    RFPrediction;
+    addSexToGroup;
+    CoCoRV;
+    mergeCoCoRVResults;
+    QQPlotAndFDR;
+    postCheckPerChr;
+    mergePostCheck;
+    BUILD_COCORV
+} from '../modules/local/cocorv'
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,79 +37,183 @@ include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_rare
 workflow RAREVARIANTBURDEN {
 
     take:
-    ch_samplesheet // channel: samplesheet read in from --input
-    multiqc_config
-    multiqc_logo
-    multiqc_methods_description
-    outdir
+    caseJointVCF // caseJointVCF read in from --caseJointVCF
+    caseSample // caseSample read in from --caseSample
 
     main:
 
-    def ch_versions = channel.empty()
-    def ch_multiqc_files = channel.empty()
-    //
-    // MODULE: Run FastQC
-    //
-    FASTQC(ch_samplesheet)
-    ch_multiqc_files = ch_multiqc_files.mix(FASTQC.out.zip.map{ _meta, file -> file })
+    // Docker/Singularity images have the CoCoRV R package pre-installed at
+    // /opt/cocorv/, but conda/mamba envs don't - the package needs to be
+    // built from source (it has C++ code via Rcpp/RcppArmadillo). Only do
+    // this when conda/mamba is actually in use; docker/singularity users see
+    // no change at all.
+    activeProfiles = workflow.profile.tokenize(',').collect { it.trim() }
+    useCondaCoCoRV = activeProfiles.any { it == 'conda' || it == 'mamba' }
 
-    //
-    // Collate and save software versions
-    //
-    def topic_versions = channel.topic("versions")
-        .distinct()
-        .branch { entry ->
-            versions_file: entry instanceof Path
-            versions_tuple: true
-        }
+    if (useCondaCoCoRV) {
+        BUILD_COCORV(Channel.fromPath("${params.CoCoRVFolder}/CoCoRV", checkIfExists: true))
+        cocorvRlibChannel = BUILD_COCORV.out.rlib.first()
+    } else {
+        cocorvRlibChannel = Channel.value([])
+    }
 
-    def topic_versions_string = topic_versions.versions_tuple
-        .map { process, tool, version ->
-            [ process[process.lastIndexOf(':')+1..-1], "  ${tool}: ${version}" ]
-        }
-        .groupTuple(by:0)
-        .map { process, tool_versions ->
-            tool_versions.unique().sort()
-            "${process}:\n${tool_versions.join('\n')}"
-        }
+    // coverage
+    if (params.caseBed == "NA") {
+        intersectChannel = Channel.value(params.controlBed)
+    } else {
+        coverageIntersect(params.caseBed, params.controlBed)
+        intersectChannel = coverageIntersect.out
+    }
 
-    def ch_collated_versions = softwareVersionsToYAML(ch_versions.mix(topic_versions.versions_file))
-        .mix(topic_versions_string)
-        .collectFile(
-            storeDir: "${outdir}/pipeline_info",
-            name: 'nf_core_'  +  'rarevariantburden_software_'  + 'mqc_'  + 'versions.yml',
-            sort: true,
-            newLine: true
-        )
+    // create chromosome channel
+    chromosomes = params.chrSet.split("\\s+")
+    chromChannel = Channel.fromList(Arrays.asList(chromosomes))
 
-    //
-    // MODULE: MultiQC
-    //
-    ch_multiqc_files = ch_multiqc_files.mix(ch_collated_versions)
-    def ch_summary_params = paramsSummaryMap(workflow, parameters_schema: "nextflow_schema.json")
-    def ch_workflow_summary = channel.value(paramsSummaryMultiqc(ch_summary_params))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_workflow_summary.collectFile(name: 'workflow_summary_mqc.yaml'))
-    def ch_multiqc_custom_methods_description = multiqc_methods_description
-        ? file(multiqc_methods_description, checkIfExists: true)
-        : file("${projectDir}/assets/methods_description_template.yml", checkIfExists: true)
-    def ch_methods_description = channel.value(methodsDescriptionText(ch_multiqc_custom_methods_description))
-    ch_multiqc_files = ch_multiqc_files.mix(ch_methods_description.collectFile(name: 'methods_description_mqc.yaml', sort: true))
-    MULTIQC(
-        ch_multiqc_files.flatten().collect().map { files ->
-            [
-                [id: 'rarevariantburden'],
-                files,
-                multiqc_config
-                    ? file(multiqc_config, checkIfExists: true)
-                    : file("${projectDir}/assets/multiqc_config.yml", checkIfExists: true),
-                multiqc_logo ? file(multiqc_logo, checkIfExists: true) : [],
-                [],
-                [],
-            ]
+    // split joint VCF by chromosome
+    // normalize and QC
+    if (params.caseVCFFileList == "NA") {
+        caseJointVCFtbi = params.caseJointVCF + ".tbi"
+        splitJointVCF(params.caseJointVCF, caseJointVCFtbi, chromChannel)
+        normalizeQC(splitJointVCF.out, params.refFASTA, params.refFASTA + ".fai", params.refFASTA + ".gzi")
+        normalizeQCChannel = normalizeQC.out
+    } else {
+        // joint VCF file is already splitted by chromosome
+        caseVCF_ch = Channel
+                        .fromList(samplesheetToList(params.caseVCFFileList, "${projectDir}/assets/schema_chr_vcf.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and case VCF file path
+
+        if (params.caseNormalizedVCFFileList == "NA") {
+            normalizeQC(caseVCF_ch, params.refFASTA, params.refFASTA + ".fai", params.refFASTA + ".gzi")
+            normalizeQCChannel = normalizeQC.out
         }
-    )
-    emit:multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
-    versions       = ch_versions                 // channel: [ path(versions.yml) ]
+        else {
+            //already have normalized vcf files
+            normalizeQCChannel = Channel
+                                .fromList(samplesheetToList(params.caseNormalizedVCFFileList, "${projectDir}/assets/schema_chr_vcf_index.json"))
+                                .map { row -> tuple(row[0].toString(), row[1], row[2]) } // Create a tuple of chr, normalized VCF file path, index file path
+        }
+    }
+
+    // annotate
+    if (params.caseAnnotatedVCFFileList == "NA") {
+        if (params.annotationTool == "ANNOVAR") {
+            annotate_annovar(normalizeQCChannel, params.reference, params.annovarFolder)
+            annotateChannel = annotate_annovar.out
+        }
+        else if (params.annotationTool == "ANNOVAR_VEP" || params.annotationTool == "VEP") {
+            vepPluginFolder = params.vepFolder + "/other_data/"
+            vepCacheFolder = "NA"
+            if (params.reference == "GRCh37") {
+                vepCacheFolder = params.vepFolder + "/ensembl-vep/cache/"
+            }
+            else if (params.reference == "GRCh38") {
+                vepCacheFolder = params.vepFolder + "/ensembl-vep/cache_hg38/"
+            }
+            annotate_vep(normalizeQCChannel, params.reference, params.annovarFolder, vepCacheFolder, vepPluginFolder, params.refFASTA)
+            annotateChannel = annotate_vep.out
+        }
+    } else {
+        //already have annotated vcf files
+        annotateChannel = Channel
+                                .fromList(samplesheetToList(params.caseAnnotatedVCFFileList, "${projectDir}/assets/schema_chr_vcf_index.json"))
+                                .map { row -> tuple(row[0].toString(), row[1], row[2]) } // Create a tuple of chr, annotated VCF file path, index file path
+    }
+
+    if (params.caseGenotypeGDSFileList == "NA" && params.caseAnnotationGDSFileList == "NA") {
+        // case genoypte vcf to gds
+        caseGenotypeGDS(normalizeQCChannel)
+        caseGenotypeGDSChannel = caseGenotypeGDS.out
+
+        // case annotation vcf to gds
+        caseAnnotationGDS(annotateChannel)
+        caseAnnotationGDSChannel = caseAnnotationGDS.out
+    }
+    else {
+        //already have GDS converted genotype files and annotation files
+        caseGenotypeGDSChannel = Channel
+                        .fromList(samplesheetToList(params.caseGenotypeGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
+
+
+        caseAnnotationGDSChannel = Channel
+                        .fromList(samplesheetToList(params.caseAnnotationGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
+
+    }
+
+    // run gnomAD based population prediction
+    if (params.casePopulation == "NA") {
+        // extract gnomAD positions
+        extractGnomADPositions(normalizeQCChannel, params.gnomADPCPosition)
+
+        // merge extracted gnomAD positions
+        mergeExtractedPositions(extractGnomADPositions.out[0].collect(),
+                            extractGnomADPositions.out[1].collect())
+
+        RFPrediction(mergeExtractedPositions.out, params.loadingPath, params.rfModelPath)
+        if (params.addSexToCaseGroup) {
+            //do sex stratified analysis
+            addSexToGroup(RFPrediction.out[1], params.covariate)
+            populationChannel = addSexToGroup.out
+        } else {
+            populationChannel = RFPrediction.out[1]
+        }
+    } else {
+        //already have ethnicity prediction for all samples
+        populationChannel = Channel.value(params.casePopulation)
+    }
+
+    // run CoCoRV
+    // RFPrediction.out.view()
+
+    controlGenotypeGDSChannel = Channel
+                        .fromList(samplesheetToList(params.controlGenotypeGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
+
+    controlAnnotationGDSChannel = Channel
+                        .fromList(samplesheetToList(params.controlAnnotationGDSFileList, "${projectDir}/assets/schema_chr_gds.json"))
+                        .map { row -> tuple(row[0].toString(), row[1]) } // Create a tuple of chr and GDS file path
+
+    controlChannel = controlGenotypeGDSChannel.join(controlAnnotationGDSChannel)
+    caseChannel = caseGenotypeGDSChannel.join(caseAnnotationGDSChannel)
+
+    if (params.reference == "GRCh37") {
+        cocorvOutChannel = CoCoRV(caseChannel.join(controlChannel),
+            intersectChannel,
+            populationChannel,
+            params.ACANConfig,
+            params.variantExclude,
+            params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds",
+            params.caseSample,
+            cocorvRlibChannel)
+    }
+    else if (params.reference == "GRCh38") {
+        cocorvOutChannel = CoCoRV(caseChannel.join(controlChannel),
+            intersectChannel,
+            populationChannel,
+            params.ACANConfig,
+            params.variantExclude,
+            params.controlDataFolder + "/full_vs_gnomAD.p0.05.OR1.ignoreEthnicityInLD.rds",
+            params.caseSample,
+            cocorvRlibChannel)
+    }
+
+    // merge CoCoRV results
+    mergeCoCoRVResults(cocorvOutChannel.map{it[1]}.collect(), cocorvOutChannel.map{it[2]}.collect(),
+        cocorvOutChannel.map{it[3]}.collect())
+
+    // QQ plot and FDR
+    QQPlotAndFDR(mergeCoCoRVResults.out.association_res, mergeCoCoRVResults.out.caseVariants_res, mergeCoCoRVResults.out.controlVariants_res, cocorvRlibChannel)
+
+    normalizeQCAnnotateChannel = normalizeQCChannel.join(annotateChannel)
+    postCheckInputChannel = normalizeQCAnnotateChannel.join(cocorvOutChannel)
+
+    postCheckPerChr(postCheckInputChannel, params.topK, params.caseControl, params.reference, params.caseSample)
+    mergePostCheck(postCheckPerChr.out.collect(), params.topK, params.caseControl, mergeCoCoRVResults.out.association_res)
+
+    emit:association_res = mergeCoCoRVResults.out.association_res // channel: /path/to/association.tsv
+    qqplot               = QQPlotAndFDR.out.qqplot                // channel: /path/to/association.tsv.dominant.nRep1000.pdf
+
 }
 
 /*

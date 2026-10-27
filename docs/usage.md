@@ -6,69 +6,88 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+**nf-core/rarevariantburden (CoCoRV-nf)** is a bioinformatics pipeline that performs consistent summary count based rare variant burden test, which is useful when we only have sequenced cases/patients data, no matched control data, here we provided pre-processed and annotated public summary count data, such as gnomAD data, which can be used for rare variant burden test and can be used to identify disease-predisposition genes present in the case study.
 
-## Samplesheet input
+## Prerequisites
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+1. Install Nextflow (>=24.04.2) using the instructions [here.](https://nextflow.io/docs/latest/getstarted.html#installation)
+2. Install one of the following technologies for full pipeline reproducibility: Docker, Singularity, Podman, Shifter or Charliecloud.
 
-```bash
---input '[path to samplesheet file]'
-```
+## Run nf-core/rarevariantburden (CoCoRV-nf) with test data
 
-### Multiple runs of the same sample
+Before running the pipeline with your data, we recommend running it with the test dataset available [here](https://github.com/nf-core/test-datasets/tree/rarevariantburden). You do not need to download the data as the pipeline is configured to fetch that data automatically for you when you use the test profile.
 
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
-```
-
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
-```
-
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-
-An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
-
-## Running the pipeline
-
-The typical command for running the pipeline is as follows:
+Run the following command, where YOURPROFILE is the package manager you installed on your machine. For example, `-profile test,docker` or `-profile test,singularity`. You also need a profile 'institute' which will be a profile to run nextflow on your institute's cluster environment :
 
 ```bash
-nextflow run nf-core/rarevariantburden --input ./samplesheet.csv --outdir ./results --genome GRCh37 -profile docker
+nextflow run rarevariantburden/main.nf \
+    -profile test,<YOURPROFILE>,<institute> \
+    --outdir <OUTDIR>
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+> Check [nf-core/configs](https://github.com/nf-core/configs/tree/master/conf) to see if a custom config file to run nf-core pipelines already exists for your institute. If so, you can simply use `-profile test,<institute>` in your command. This enables the appropriate package manager and sets the appropriate execution settings for your machine.
+> NB: The order of profiles is important! They are loaded in sequence, so later profiles can overwrite earlier profiles.
 
-Note that the pipeline will create the following files in your working directory:
+Running the command creates the following files in your working directory:
 
-```bash
-work                # Directory containing the nextflow working files
+```
+work                # Directory containing the Nextflow working files
 <OUTDIR>            # Finished results in specified location (defined with --outdir)
 .nextflow_log       # Log file from Nextflow
-# Other nextflow hidden files, eg. history of pipeline runs and old logs.
+# Other Nextflow hidden files, like history of pipeline logs.
+```
+
+## Running the pipeline with your data
+
+Running the pipeline involves three steps:
+
+1. Prepare joint called VCF file:
+
+- First, prepare the joint called and VQSR applied VCF file from your case study. You can use [nf-core/sarek](https://nf-co.re/sarek/) pipeline's [GATK joint calling module](https://nf-co.re/sarek/3.5.1/docs/output/#gatk-joint-germline-variant-calling) to prepare a joint called and VQSR applied VCF file from your sample VCF files. You also need to prepare a text file containing sample IDs, one sample ID per line.
+
+2. Download control data:
+
+- For control data, you need to download the control data from our Amazon AWS s3 bucket. We provide 3 different control datasets, For build GRCH37, we have gnomAD v2 exome data, for build GRCh38, we have gnomAD v4.1 exome and gnomAD v4.1 genome data as controls.
+- As the control data is a huge dataset, it is better to use Amazon AWS command line tool [aws-cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) to download the data. After installing this, you can use "aws s3" command to list any s3 bucket folder, or download any folder or files from s3. You will find the s3 commands list [in here](https://docs.aws.amazon.com/cli/latest/reference/s3/).
+- Here are the s3 bucket paths of the 3 gnomAD control datasets:
+  - s3://cocorv-resource-files/gnomADv2exome/
+  - s3://cocorv-resource-files/gnomADv4.1exome/
+  - s3://cocorv-resource-files/gnomADv4.1genome/
+- To download the data, you need to run following command:
+
+```bash
+cd /local-dir-path-where-you-want-download/
+aws s3 cp s3://cocorv-resource-files/gnomADv2exome/ . --recursive
+```
+
+- You can check all resource files for our pipeline using this command:
+
+```bash
+aws s3 ls s3://cocorv-resource-files/
+```
+
+3. Download the annotation tool resources:
+
+- You also need to download the annovar and VEP resource folders for running Annovar and VEP annotation.
+- Here are the s3 bucket paths of the annotation tool datasets:
+  - s3://cocorv-resource-files/annovarFolder/
+  - s3://cocorv-resource-files/vepFolder/
+
+Now, you can run the pipeline using the following command:
+
+<!-- nf-core: update the following command to include all required parameters for a minimal example -->
+
+```bash
+nextflow run rarevariantburden/main.nf \
+   -profile <docker/singularity/.../institute> \
+   --caseJointVCF <jointVCF.vcf.gz> \
+   --caseSample <sampleList.txt> \
+   --controlDataFolder <controldataFolder> \
+   --annovarFolder <annovarFolder> \
+   --vepFolder <vepFolder> \
+   --reference <GRCh37/GRCh38> \
+   --gnomADVersion <v2exome/v4exome/v4genome> \
+   --outdir <OUTDIR>
 ```
 
 If you wish to repeatedly use the same parameters for multiple runs, rather than specifying each flag in the command, you can specify these in a params file.
@@ -76,7 +95,7 @@ If you wish to repeatedly use the same parameters for multiple runs, rather than
 Pipeline settings can be provided in a `yaml` or `json` file via `-params-file <file>`.
 
 > [!WARNING]
-> Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/running/run-pipelines#configuring-pipelines), other infrastructural tweaks (such as output directories), or module arguments (args).
+> Do not use `-c <file>` to specify parameters as this will result in errors. Custom config files specified with `-c` must only be used for [tuning process resource specifications](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources), other infrastructural tweaks (such as output directories), or module arguments (args).
 
 The above pipeline run specified with a params file in yaml format:
 
@@ -87,13 +106,71 @@ nextflow run nf-core/rarevariantburden -profile docker -params-file params.yaml
 with:
 
 ```yaml title="params.yaml"
-input: './samplesheet.csv'
+caseJointVCF: 'jointVCF.vcf.gz'
+caseSample: 'sampleList.txt'
+controlDataFolder: 'controldataFolder'
+annovarFolder: 'annovarFolder'
+vepFolder: 'vepFolder'
+reference: 'GRCh38'
+gnomADVersion: 'v4exome'
 outdir: './results/'
-genome: 'GRCh37'
 <...>
 ```
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
+
+A sample params file in yaml format for running for only chr 21 and 22 with a case VCF file list looks like this (case VCF file list needs to contain only VCF files for chr 21 and chr 22):
+
+```yaml title="params.yaml"
+caseJointVCF: 'NA'
+caseVCFFileList: 'caseVCFFileList-chr21-22.csv'
+caseBed: 'coverage.summary.bed.gz'
+controlDataFolder: 'controldataFolder'
+annovarFolder: 'annovarFolder'
+vepFolder: 'vepFolder'
+reference: 'GRCh38'
+gnomADVersion: 'v4exome'
+outdir: './results/'
+chrSet: '21 22'
+<...>
+```
+
+A sample params file in yaml format for running with case VCF file list and for both annovar and VEP annotation looks like this:
+
+```yaml title="params.yaml"
+caseJointVCF: 'NA'
+caseVCFFileList: 'caseVCFFileList.csv'
+caseBed: 'coverage.summary.bed.gz'
+controlDataFolder: 'controldataFolder'
+annovarFolder: 'annovarFolder'
+vepFolder: 'vepFolder'
+reference: 'GRCh38'
+gnomADVersion: 'v4exome'
+outdir: './results/'
+annotationTool: 'ANNOVAR_VEP'
+variantGroup: 'vep_lof_nosplicing'
+variantGroupCustom: 'variantGroupCustom.txt'
+groupColumn: 'SYMBOL'
+<...>
+```
+
+A sample params file in yaml format for running with case VCF file list containing chr21, chr22, and chrX and for sex-stratified analysis looks like this:
+
+```yaml title="params.yaml"
+caseJointVCF: 'NA'
+caseVCFFileList: 'caseVCFFileList-chr21-22-X.csv'
+caseBed: 'coverage.summary.bed.gz'
+controlDataFolder: 'controldataFolder'
+annovarFolder: 'annovarFolder'
+vepFolder: 'vepFolder'
+reference: 'GRCh38'
+gnomADVersion: 'v4exome'
+outdir: './results/'
+chrSet: '21 22 X'
+addSexToCaseGroup: true
+covariate: 'sampleID-sex.txt'
+<...>
+```
 
 ### Updating the pipeline
 
@@ -149,7 +226,7 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 - `shifter`
   - A generic configuration profile to be used with [Shifter](https://nersc.gitlab.io/development/shifter/how-to-use/)
 - `charliecloud`
-  - A generic configuration profile to be used with [Charliecloud](https://charliecloud.io/)
+  - A generic configuration profile to be used with [Charliecloud](https://hpc.github.io/charliecloud/)
 - `apptainer`
   - A generic configuration profile to be used with [Apptainer](https://apptainer.org/)
 - `wave`
@@ -173,19 +250,19 @@ Specify the path to a specific config file (this is a core Nextflow command). Se
 
 Whilst the default requirements set within the pipeline will hopefully work for most people and with most input data, you may find that you want to customise the compute resources that the pipeline requests. Each step in the pipeline has a default set of requirements for number of CPUs, memory and time. For most of the pipeline steps, if the job exits with any of the error codes specified [here](https://github.com/nf-core/rnaseq/blob/4c27ef5610c87db00c3c5a3eed10b1d161abf575/conf/base.config#L18) it will automatically be resubmitted with higher resources request (2 x original, then 3 x original). If it still fails after the third attempt then the pipeline execution is stopped.
 
-To change the resource requests, please see the [max resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources) and [customise process resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources) section of the nf-core website.
+To change the resource requests, please see the [max resources](https://nf-co.re/docs/usage/configuration#max-resources) and [tuning workflow resources](https://nf-co.re/docs/usage/configuration#tuning-workflow-resources) section of the nf-core website.
 
 ### Custom Containers
 
 In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However, in some cases the pipeline specified version maybe out of date.
 
-To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions) section of the nf-core website.
+To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/usage/configuration#updating-tool-versions) section of the nf-core website.
 
 ### Custom Tool Arguments
 
 A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
 
-To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#modifying-tool-arguments) section of the nf-core website.
+To learn how to provide additional arguments to a particular tool of the pipeline, please see the [customising tool arguments](https://nf-co.re/docs/usage/configuration#customising-tool-arguments) section of the nf-core website.
 
 ### nf-core/configs
 

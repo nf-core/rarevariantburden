@@ -10,9 +10,6 @@ inputs:
   total_shards:
     description: "Total number of test shards(NOT the total number of matrix jobs)"
     required: true
-  paths:
-    description: "Test paths"
-    required: true
   tags:
     description: "Tags to pass as argument for nf-test --tag parameter"
     required: false
@@ -25,9 +22,9 @@ runs:
         version: "${{ env.NXF_VERSION }}"
 
     - name: Set up Python
-      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+      uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
       with:
-        python-version: "3.14"
+        python-version: "3.12"
 
     - name: Install nf-test
       uses: nf-core/setup-nf-test@4069fbbaabe94c08faba4ad261bfa88225ba133f # v2
@@ -48,13 +45,19 @@ runs:
 
     - name: Conda setup
       if: contains(inputs.profile, 'conda')
-      uses: conda-incubator/setup-miniconda@8ee1f361103df19b6f8c8655fd3967a8ecb162d5 # v4
+      uses: conda-incubator/setup-miniconda@a4260408e20b96e80095f42ff7f1a15b27dd94ca # v3
       with:
+        miniconda-version: "latest"
         auto-update-conda: true
         conda-solver: libmamba
-        channels: conda-forge
-        channel-priority: strict
-        conda-remove-defaults: true
+        channels: conda-forge,bioconda
+
+    - name: Set up Conda PATH
+      if: contains(inputs.profile, 'conda')
+      shell: bash
+      run: |
+        echo $(realpath $CONDA)/condabin >> $GITHUB_PATH
+        echo $(realpath python) >> $GITHUB_PATH
 
     - name: Run nf-test
       shell: bash
@@ -70,8 +73,8 @@ runs:
           --tap=test.tap \
           --shard ${{ inputs.shard }}/${{ inputs.total_shards }}
 
-          # Save the absolute path of the test.tap file to the output
-          echo "tap_file_path=$(realpath test.tap)" >> $GITHUB_OUTPUT
+        # Save the absolute path of the test.tap file to the output
+        echo "tap_file_path=$(realpath test.tap)" >> $GITHUB_OUTPUT
 
     - name: Generate test summary
       if: always()
@@ -90,12 +93,10 @@ runs:
           while IFS= read -r line; do
             if [[ $line =~ ^ok ]]; then
               test_name="${line#ok }"
-              # Remove the test number from the beginning
               test_name="${test_name#* }"
               echo "| ✅ | ${test_name} | ${{ inputs.profile }} | ${{ inputs.shard }}/${{ inputs.total_shards }} |" >> $GITHUB_STEP_SUMMARY
             elif [[ $line =~ ^not\ ok ]]; then
               test_name="${line#not ok }"
-              # Remove the test number from the beginning
               test_name="${test_name#* }"
               echo "| ❌ | ${test_name} | ${{ inputs.profile }} | ${{ inputs.shard }}/${{ inputs.total_shards }} |" >> $GITHUB_STEP_SUMMARY
             fi
@@ -103,9 +104,3 @@ runs:
         else
           echo "| ⚠️ | No test results found | ${{ inputs.profile }} | ${{ inputs.shard }}/${{ inputs.total_shards }} |" >> $GITHUB_STEP_SUMMARY
         fi
-
-    - name: Clean up
-      if: always()
-      shell: bash
-      run: |
-        sudo rm -rf /home/ubuntu/tests/
